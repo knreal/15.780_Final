@@ -1,0 +1,4533 @@
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/eileenliu/Documents/Airline_DataCleaning_and_Analysis.log
+  log type:  text
+ opened on:  13 Dec 2022, 13:16:59
+
+. ssc install randomtag
+checking randomtag consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. 
+. *cd "/Users/eileenliu/Documents"
+. import delimited "Aircraft_Type.csv"
+(encoding automatically selected: ISO-8859-1)
+(3 vars, 1,562 obs)
+
+. rename v2 flight
+
+. rename v3 aircraft
+
+. drop if v1==.
+(1 observation deleted)
+
+. save aircraft, replace
+file aircraft.dta saved
+
+. clear
+
+. import delimited "Clean_Dataset.csv"
+(encoding automatically selected: ISO-8859-1)
+(12 vars, 300,153 obs)
+
+. isid v1
+
+. set seed 4732321
+
+. 
+. 
+. merge m:m flight using "aircraft.dta"
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                           300,153  (_merge==3)
+    -----------------------------------------
+
+. rename aircraft Aircraft
+
+. drop if Aircraft == ""
+(11,686 observations deleted)
+
+. gen capacity = 188 if Aircraft == "737"
+(283,945 missing values generated)
+
+. replace capacity = 194 if Aircraft == "A20N"
+(38,878 real changes made)
+
+. replace capacity = 180 if Aircraft == "A320"
+(161,914 real changes made)
+
+. replace capacity = 220 if Aircraft == "A321"
+(42,292 real changes made)
+
+. replace capacity = 74 if Aircraft == "AT43"
+(328 real changes made)
+
+. replace capacity = 74 if Aircraft == "ATR"
+(2,214 real changes made)
+
+. replace capacity = 210 if Aircraft == "B38M"
+(1,995 real changes made)
+
+. replace capacity = 169 if Aircraft == "B738"
+(21,027 real changes made)
+
+. gen business_capacity = 16 if Aircraft == "B738"
+(267,440 missing values generated)
+
+. gen economy_capacity = 153 if Aircraft == "B738"
+(267,440 missing values generated)
+
+. replace capacity = 342 if Aircraft == "B77W"
+(3,895 real changes made)
+
+. replace business_capacity = 39 if Aircraft == "B77W"
+(3,895 real changes made)
+
+. replace economy_capacity = 303 if Aircraft == "B77W"
+(3,895 real changes made)
+
+. replace capacity = 256 if Aircraft == "B788"
+(1,735 real changes made)
+
+. replace business_capacity = 18 if Aircraft == "B788"
+(1,735 real changes made)
+
+. replace economy_capacity = 238 if Aircraft == "B788"
+(1,735 real changes made)
+
+. replace capacity = 78 if Aircraft == "DH8B"
+(2,048 real changes made)
+
+. replace economy_capacity = capacity if economy_capacity == .
+(254,191 real changes made)
+
+. 
+. 
+. 
+. 
+. gen class_dummy = class == "Business"
+
+. *
+. *sort airline
+. *by airline: summarize price
+. *by airline: summarize class
+. 
+. *Only Air India and Vistara have business classes 
+. 
+. *gen dummies for airlines 
+. gen airasia = airline == "AirAsia"
+
+. gen airindia = airline == "Air_India"
+
+. gen gofirst = airline == "GO_FIRST"
+
+. gen indigo = airline == "Indigo"
+
+. gen spicejet = airline == "SpiceJet"
+
+. gen vistara = airline == "Vistara"
+
+. 
+. replace stops = "1" if stops =="one"
+(241,384 real changes made)
+
+. replace stops = "0" if stops =="zero"
+(34,651 real changes made)
+
+. replace stops = "2" if stops =="two_or_more"
+(12,432 real changes made)
+
+. destring stops, replace ignore(" ")
+stops: all characters numeric; replaced as byte
+
+. 
+. 
+. gen source_bangalore = source_city == "Bangalore"
+
+. gen source_chennai = source_city == "Chennai"
+
+. gen source_delhi = source_city == "Delhi"
+
+. gen source_hyperabad = source_city == "Hyderabad"
+
+. gen source_kolkata = source_city == "Kolkata"
+
+. gen source_mumbai = source_city == "Mumbai"
+
+. 
+. gen destination_bangalore = destination_city == "Bangalore"
+
+. gen destination_chennai = destination_city == "Chennai"
+
+. gen destination_delhi = destination_city == "Delhi"
+
+. gen destination_hyperabad = destination_city == "Hyderabad"
+
+. gen destination_kolkata = destination_city == "Kolkata"
+
+. gen destination_mumbai = destination_city == "Mumbai"
+
+. 
+. gen depart_after = departure_time == "Afternoon"
+
+. gen depart_early = departure_time == "Early_Morning"
+
+. gen depart_even = departure_time == "Evening"
+
+. gen depart_late = departure_time == "Late_Night"
+
+. gen depart_morn = departure_time == "Morning"
+
+. gen depart_night = departure_time == "Night"
+
+. 
+. gen arr_after = arrival_time == "Afternoon"
+
+. gen arr_early = arrival_time == "Early_Morning"
+
+. gen arr_even = arrival_time == "Evening"
+
+. gen arr_late = arrival_time == "Late_Night"
+
+. gen arr_morn = arrival_time == "Morning"
+
+. gen arr_night = arrival_time == "Night"
+
+. 
+. gen sourcedestination = source_city+destination_city
+
+. egen total = count(sourcedestination) 
+
+. bysort sourcedestination: egen type = count(sourcedestination)
+
+. gen competition = type/total
+
+. 
+. gen days_left_squared = days_left^2
+
+. gen days_left_cubed = days_left^3
+
+. 
+. gen duration2 = string(duration)
+
+. gen stops2 = string(stops)
+
+. 
+. gen id = flight + sourcedestination+duration2+class+arrival_time+departure_time+stops2
+
+. 
+. sort id days_left 
+
+. 
+. by id, sort: gen blarg = _n==1
+
+. 
+. preserve
+
+. contract id
+
+. save "flight_freq.dta", replace
+file flight_freq.dta saved
+
+. restore
+
+. 
+. drop _merge
+
+. merge m:m id using "flight_freq.dta"
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                           288,467  (_merge==3)
+    -----------------------------------------
+
+. 
+. 
+. collapse price, by(airline flight source_city departure_time stops arrival_time destination_city class duration days_left Aircraft capacity business_c
+> apacity economy_capacity class_dummy airasia airindia gofirst indigo spicejet vistara source_bangalore source_chennai source_delhi source_hyperabad so
+> urce_kolkata source_mumbai destination_bangalore destination_chennai destination_delhi destination_hyperabad destination_kolkata destination_mumbai de
+> part_after depart_early depart_even depart_late depart_morn depart_night arr_after arr_early arr_even arr_late arr_morn arr_night sourcedestination to
+> tal type competition days_left_squared days_left_cubed id blarg _freq)
+
+. 
+. 
+. by id, sort: gen blarg2 = _n==1
+
+. 
+. drop _freq
+
+. preserve
+
+. contract id
+
+. save "flight_freq2.dta", replace
+file flight_freq2.dta saved
+
+. restore
+
+. 
+. merge m:m id using "flight_freq2.dta"
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                           287,119  (_merge==3)
+    -----------------------------------------
+
+. 
+. 
+. drop if _freq<31
+(75,235 observations deleted)
+
+. 
+. save "averaged_data.dta", replace
+file averaged_data.dta saved
+
+. 
+. 
+. *********************
+. ********TRain by flight
+. **********************
+. *Delhi/Mumbai
+. clear 
+
+. use "averaged_data.dta"
+
+. set seed 4732321
+
+. ssc inst unique
+checking unique consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. keep if sourcedestination == "DelhiMumbai"|sourcedestination == "MumbaiDelhi"
+(189,758 observations deleted)
+
+. drop _merge
+
+. 
+. save delhimumbai.tmp, replace
+file delhimumbai.tmp saved as .dta format
+
+. 
+. unique id
+Number of unique values of id is  534
+Number of records is  22126
+
+. 
+. by id, sort: gen id2 = _n==1
+
+. 
+. 
+. 
+. keep if id2==1
+(21,592 observations deleted)
+
+. randomtag, count(374) gen(train_noclass)
+
+. save delhimumbaiunique.tmp, replace
+file delhimumbaiunique.tmp saved as .dta format
+
+. 
+. 
+. use delhimumbai.tmp
+
+. 
+. 
+. merge m:m id using delhimumbaiunique.tmp
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                            22,126  (_merge==3)
+    -----------------------------------------
+
+. drop _merge
+
+. 
+. 
+. 
+. eststo Mumbai_Delhi: regress price duration days_left days_left_squared days_left_cubed stops depart_after depart_early depart_even depart_late depart
+> _morn arr_after arr_early arr_even arr_late arr_morn capacity class_dummy if train_noclass==1
+
+      Source |       SS           df       MS      Number of obs   =    15,039
+-------------+----------------------------------   F(17, 15021)    =   7350.37
+       Model |  5.0864e+12        17  2.9920e+11   Prob > F        =    0.0000
+    Residual |  6.1143e+11    15,021  40705192.7   R-squared       =    0.8927
+-------------+----------------------------------   Adj R-squared   =    0.8926
+       Total |  5.6978e+12    15,038   378893496   Root MSE        =    6380.1
+
+-----------------------------------------------------------------------------------
+            price | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+------------------+----------------------------------------------------------------
+         duration |  -1.501895   10.54039    -0.14   0.887    -22.16235    19.15856
+        days_left |  -665.5119   44.70449   -14.89   0.000    -753.1382   -577.8856
+days_left_squared |   16.73164   2.011894     8.32   0.000     12.78808     20.6752
+  days_left_cubed |  -.1308474    .026419    -4.95   0.000    -.1826319    -.079063
+            stops |   7867.679   153.1094    51.39   0.000     7567.566    8167.792
+     depart_after |   68.19441   220.4209     0.31   0.757    -363.8574    500.2462
+     depart_early |   628.3327   216.2607     2.91   0.004     204.4354     1052.23
+      depart_even |  -1174.815   206.7749    -5.68   0.000    -1580.119    -769.511
+      depart_late |   306.9873   552.9489     0.56   0.579    -776.8599    1390.835
+      depart_morn |   557.9267   214.1109     2.61   0.009     138.2431    977.6102
+        arr_after |  -1823.233   162.5539   -11.22   0.000    -2141.859   -1504.608
+        arr_early |   -2696.71   376.5446    -7.16   0.000    -3434.783   -1958.637
+         arr_even |  -2473.305   154.3558   -16.02   0.000    -2775.861   -2170.749
+         arr_late |  -3855.116   261.0141   -14.77   0.000    -4366.735   -3343.496
+         arr_morn |  -1929.799   162.5851   -11.87   0.000    -2248.485   -1611.112
+         capacity |  -15.88635   2.022221    -7.86   0.000    -19.85015   -11.92255
+      class_dummy |   36980.26   113.7501   325.10   0.000      36757.3    37203.23
+            _cons |   11847.58   533.3036    22.22   0.000     10802.24    12892.92
+-----------------------------------------------------------------------------------
+
+. 
+. esttab Mumbai_Delhi using "Mumbai_Delhi_Regression.tex", p replace r2 label 
+(output written to Mumbai_Delhi_Regression.tex)
+
+. 
+. predict pred_price  if  train_noclass==0
+(option xb assumed; fitted values)
+(15,728 missing values generated)
+
+. gen error = pred_price-price
+(15,728 missing values generated)
+
+. gen error_square = error^2
+(15,728 missing values generated)
+
+. gen ape = abs(error/price)
+(15,728 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      6,398    4.76e+07    1.17e+08   .4834595   2.11e+09
+
+. *Mumbai Delhi Linear Regression, not cleaned data, by flight
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      6,398    .5695272    .6100809   .0000158   3.485467
+
+. 
+. **********************
+. *Delhi/Bangalore
+. clear 
+
+. use "averaged_data.dta"
+
+. set seed 4732321
+
+. ssc inst unique
+checking unique consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. keep if sourcedestination == "DelhiBangalore"|sourcedestination == "BangaloreDelhi"
+(192,569 observations deleted)
+
+. drop _merge
+
+. 
+. save delhibangalore.tmp, replace
+file delhibangalore.tmp saved as .dta format
+
+. 
+. unique id
+Number of unique values of id is  468
+Number of records is  19315
+
+. 
+. by id, sort: gen id2 = _n==1
+
+. 
+. 
+. 
+. keep if id2==1
+(18,847 observations deleted)
+
+. randomtag, count(324) gen(train_noclass)
+
+. save delhibangaloreunique.tmp, replace
+file delhibangaloreunique.tmp saved as .dta format
+
+. 
+. 
+. use delhibangalore.tmp
+
+. 
+. 
+. merge m:m id using delhibangaloreunique.tmp
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                            19,315  (_merge==3)
+    -----------------------------------------
+
+. drop _merge
+
+. 
+. 
+. 
+. eststo Bangalore_Delhi: regress price duration days_left days_left_squared days_left_cubed stops depart_after depart_early depart_even depart_late dep
+> art_morn arr_after arr_early arr_even arr_late arr_morn   capacity class_dummy if train_noclass==1
+
+      Source |       SS           df       MS      Number of obs   =    13,369
+-------------+----------------------------------   F(17, 13351)    =  10687.70
+       Model |  5.3010e+12        17  3.1183e+11   Prob > F        =    0.0000
+    Residual |  3.8953e+11    13,351    29176073   R-squared       =    0.9315
+-------------+----------------------------------   Adj R-squared   =    0.9315
+       Total |  5.6906e+12    13,368   425685139   Root MSE        =    5401.5
+
+-----------------------------------------------------------------------------------
+            price | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+------------------+----------------------------------------------------------------
+         duration |   66.92278   12.42672     5.39   0.000     42.56464    91.28091
+        days_left |  -738.7388   40.96083   -18.04   0.000    -819.0278   -658.4498
+days_left_squared |   18.86443   1.817513    10.38   0.000     15.30185    22.42701
+  days_left_cubed |  -.1569907   .0235866    -6.66   0.000    -.2032238   -.1107577
+            stops |   5030.466   146.2066    34.41   0.000      4743.88    5317.052
+     depart_after |  -606.9547   210.5694    -2.88   0.004    -1019.701   -194.2088
+     depart_early |   530.0973   191.7732     2.76   0.006     154.1947    905.9999
+      depart_even |  -480.2354   178.9581    -2.68   0.007    -831.0186   -129.4521
+      depart_late |  -381.4199   702.3707    -0.54   0.587    -1758.166    995.3262
+      depart_morn |   1758.912   199.1962     8.83   0.000     1368.459    2149.365
+        arr_after |  -1410.329   161.8671    -8.71   0.000    -1727.612   -1093.047
+        arr_early |   3380.845   364.3254     9.28   0.000     2666.716    4094.974
+         arr_even |  -1268.256   135.9483    -9.33   0.000    -1534.734   -1001.778
+         arr_late |  -825.5197   193.8703    -4.26   0.000    -1205.533   -445.5064
+         arr_morn |   -139.117   146.9344    -0.95   0.344    -427.1293    148.8953
+         capacity |   -19.9367    1.87798   -10.62   0.000     -23.6178   -16.25559
+      class_dummy |   43051.73   107.8504   399.18   0.000     42840.32    43263.13
+            _cons |   13350.84   470.9475    28.35   0.000     12427.72    14273.97
+-----------------------------------------------------------------------------------
+
+. 
+. esttab Bangalore_Delhi using "Bangalore_Delhi_Regression.tex", p replace r2 label 
+(output written to Bangalore_Delhi_Regression.tex)
+
+. 
+. predict pred_price  if  train_noclass==0
+(option xb assumed; fitted values)
+(13,403 missing values generated)
+
+. gen error = pred_price-price
+(13,403 missing values generated)
+
+. gen error_square = error^2
+(13,403 missing values generated)
+
+. gen ape = abs(error/price)
+(13,403 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      5,912    2.99e+07    5.38e+07   6.058617   5.99e+08
+
+. *Bangalore Delhi Linear Regression, not cleaned data, by flight
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      5,912    .4198411    .4490877   .0001639   3.040469
+
+. 
+. **********************
+. *Mumbai/Bangalore
+. clear 
+
+. use "averaged_data.dta"
+
+. set seed 4732321
+
+. ssc inst unique
+checking unique consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. keep if sourcedestination == "MumbaiBangalore"|sourcedestination == "BangaloreMumbai"
+(193,173 observations deleted)
+
+. drop _merge
+
+. 
+. save mumbaibangalore.tmp, replace
+file mumbaibangalore.tmp saved as .dta format
+
+. 
+. unique id
+Number of unique values of id is  448
+Number of records is  18711
+
+. 
+. by id, sort: gen id2 = _n==1
+
+. 
+. 
+. 
+. keep if id2==1
+(18,263 observations deleted)
+
+. randomtag, count(314) gen(train_noclass)
+
+. save mumbaibangaloreunique.tmp, replace
+file mumbaibangaloreunique.tmp saved as .dta format
+
+. 
+. 
+. use mumbaibangalore.tmp
+
+. 
+. 
+. merge m:m id using mumbaibangaloreunique.tmp
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                            18,711  (_merge==3)
+    -----------------------------------------
+
+. drop _merge
+
+. 
+. 
+. 
+. eststo Mumbai_Delhi: regress price duration days_left days_left_squared days_left_cubed stops depart_after depart_early depart_even depart_late depart
+> _morn arr_after arr_early arr_even arr_late arr_morn   capacity class_dummy if train_noclass==1
+
+      Source |       SS           df       MS      Number of obs   =    13,093
+-------------+----------------------------------   F(17, 13075)    =   6732.16
+       Model |  8.6162e+12        17  5.0684e+11   Prob > F        =    0.0000
+    Residual |  9.8436e+11    13,075  75285900.2   R-squared       =    0.8975
+-------------+----------------------------------   Adj R-squared   =    0.8973
+       Total |  9.6006e+12    13,092   733317438   Root MSE        =    8676.7
+
+-----------------------------------------------------------------------------------
+            price | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+------------------+----------------------------------------------------------------
+         duration |   29.11871    18.2581     1.59   0.111    -6.669823    64.90725
+        days_left |  -668.0246   67.12376    -9.95   0.000    -799.5969   -536.4522
+days_left_squared |   19.66773   2.980938     6.60   0.000     13.82465     25.5108
+  days_left_cubed |  -.1920968   .0387416    -4.96   0.000    -.2680359   -.1161577
+            stops |   15186.91   272.9586    55.64   0.000     14651.88    15721.95
+     depart_after |  -656.8254   322.5919    -2.04   0.042    -1289.153   -24.49833
+     depart_early |   268.7215   264.7858     1.01   0.310    -250.2972    787.7401
+      depart_even |  -1539.138   276.7175    -5.56   0.000    -2081.544   -996.7314
+      depart_late |  -6896.712   1574.605    -4.38   0.000    -9983.167   -3810.257
+      depart_morn |   1465.349   277.7164     5.28   0.000      920.985    2009.714
+        arr_after |   -1823.09   289.3252    -6.30   0.000     -2390.21   -1255.971
+        arr_early |   1407.883   410.2347     3.43   0.001     603.7629    2212.002
+         arr_even |   -1071.17    206.576    -5.19   0.000    -1476.089   -666.2515
+         arr_late |  -2598.325   343.6205    -7.56   0.000    -3271.871   -1924.779
+         arr_morn |  -999.4523   215.7473    -4.63   0.000    -1422.348   -576.5562
+         capacity |   2.281267   3.313455     0.69   0.491    -4.213587    8.776121
+      class_dummy |   50181.54   161.7119   310.31   0.000     49864.56    50498.52
+            _cons |   116.4609   829.2849     0.14   0.888    -1509.058     1741.98
+-----------------------------------------------------------------------------------
+
+. 
+. esttab Mumbai_Delhi using "Mumbai_Delhi_Regression.tex", p replace r2 label 
+(output written to Mumbai_Delhi_Regression.tex)
+
+. 
+. predict pred_price  if  train_noclass==0
+(option xb assumed; fitted values)
+(13,130 missing values generated)
+
+. gen error = pred_price-price
+(13,130 missing values generated)
+
+. gen error_square = error^2
+(13,130 missing values generated)
+
+. gen ape = abs(error/price)
+(13,130 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      5,581    6.35e+07    1.28e+08    .021889   1.82e+09
+
+. *Mumbai Bangalore Linear Regression, not cleaned data, by flight
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      5,581    .8193452     1.38531   .0000243   8.773363
+
+. 
+. 
+. 
+. ****************************
+. *Train  by observation
+. ****************************
+. *Delhi/Mumbai
+. clear 
+
+. use "averaged_data.dta"
+
+. set seed 9879879
+
+. ssc inst unique
+checking unique consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. keep if sourcedestination == "DelhiMumbai"|sourcedestination == "MumbaiDelhi"
+(189,758 observations deleted)
+
+. drop _merge
+
+. 
+. count
+  22,126
+
+. 
+. randomtag, count(15488) gen(train_noclass)
+
+. 
+. 
+. eststo Mumbai_Delhi2: regress price duration days_left days_left_squared days_left_cubed stops depart_after depart_early depart_even depart_late depar
+> t_morn arr_after arr_early arr_even arr_late arr_morn  capacity class_dummy if train_noclass==1
+
+      Source |       SS           df       MS      Number of obs   =    15,014
+-------------+----------------------------------   F(17, 14996)    =   7047.99
+       Model |  5.1585e+12        17  3.0344e+11   Prob > F        =    0.0000
+    Residual |  6.4564e+11    14,996  43053817.3   R-squared       =    0.8888
+-------------+----------------------------------   Adj R-squared   =    0.8886
+       Total |  5.8042e+12    15,013   386609100   Root MSE        =    6561.5
+
+-----------------------------------------------------------------------------------
+            price | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+------------------+----------------------------------------------------------------
+         duration |  -16.28052   10.75196    -1.51   0.130    -37.35567    4.794627
+        days_left |  -689.2875   45.65279   -15.10   0.000    -778.7725   -599.8024
+days_left_squared |   17.83469   2.057404     8.67   0.000     13.80192    21.86745
+  days_left_cubed |  -.1469489   .0270321    -5.44   0.000    -.1999352   -.0939626
+            stops |   7549.833   156.9993    48.09   0.000     7242.096    7857.571
+     depart_after |  -450.1676   218.9077    -2.06   0.040    -879.2534   -21.08185
+     depart_early |   796.4783   209.6039     3.80   0.000     385.6289    1207.328
+      depart_even |  -1287.581   201.0473    -6.40   0.000    -1681.659   -893.5039
+      depart_late |   681.9568   649.1878     1.05   0.294    -590.5305    1954.444
+      depart_morn |   274.7882   207.9069     1.32   0.186    -132.7347     682.311
+        arr_after |  -1761.025   166.5964   -10.57   0.000    -2087.574   -1434.475
+        arr_early |   -3043.24   346.4413    -8.78   0.000    -3722.307   -2364.172
+         arr_even |  -2466.786   159.1838   -15.50   0.000    -2778.806   -2154.767
+         arr_late |    -3427.2   268.9334   -12.74   0.000    -3954.342   -2900.057
+         arr_morn |  -2604.875    164.158   -15.87   0.000    -2926.645   -2283.106
+         capacity |  -20.43194   2.113631    -9.67   0.000    -24.57491   -16.28896
+      class_dummy |   37211.79   116.1168   320.47   0.000     36984.19    37439.39
+            _cons |   13490.56   557.4502    24.20   0.000     12397.89    14583.23
+-----------------------------------------------------------------------------------
+
+. 
+. *esttab Mumbai_Delhi2 using "Mumbai_Delhi_Regression.tex", p replace r2 label 
+. 
+. predict pred_price  if  train_noclass==0
+(option xb assumed; fitted values)
+(15,703 missing values generated)
+
+. gen error = pred_price-price
+(15,703 missing values generated)
+
+. gen error_square = error^2
+(15,703 missing values generated)
+
+. gen ape = abs(error/price)
+(15,703 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      6,423    4.15e+07    1.00e+08   .6373465   2.05e+09
+
+. *Mumbai Delhi Linear Regression, not cleaned data
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      6,423    .5383154    .5639089   .0001268   3.520335
+
+. ************************
+. *Delhi/Bangalore
+. clear 
+
+. use "averaged_data.dta"
+
+. set seed 9879879
+
+. ssc inst unique
+checking unique consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. keep if sourcedestination == "DelhiBangalore"|sourcedestination == "BangaloreDelhi"
+(192,569 observations deleted)
+
+. drop _merge
+
+. 
+. count
+  19,315
+
+. 
+. randomtag, count(13521) gen(train_noclass)
+
+. 
+. 
+. eststo Bangalore_Delhi2: regress price duration days_left days_left_squared days_left_cubed stops depart_after depart_early depart_even depart_late de
+> part_morn arr_after arr_early arr_even arr_late arr_morn    capacity class_dummy if train_noclass==1
+
+      Source |       SS           df       MS      Number of obs   =    13,495
+-------------+----------------------------------   F(17, 13477)    =  11075.09
+       Model |  5.4480e+12        17  3.2047e+11   Prob > F        =    0.0000
+    Residual |  3.8997e+11    13,477  28936059.3   R-squared       =    0.9332
+-------------+----------------------------------   Adj R-squared   =    0.9331
+       Total |  5.8380e+12    13,494   432633091   Root MSE        =    5379.2
+
+-----------------------------------------------------------------------------------
+            price | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+------------------+----------------------------------------------------------------
+         duration |   44.75927   11.43816     3.91   0.000     22.33887    67.17966
+        days_left |  -782.2406   40.48962   -19.32   0.000    -861.6059   -702.8753
+days_left_squared |   20.58729   1.800708    11.43   0.000     17.05765    24.11693
+  days_left_cubed |  -.1754745    .023414    -7.49   0.000    -.2213692   -.1295799
+            stops |   5191.823   140.6782    36.91   0.000     4916.074    5467.572
+     depart_after |  -107.8816   216.6722    -0.50   0.619    -532.5895    316.8263
+     depart_early |   771.5488   196.9959     3.92   0.000     385.4093    1157.688
+      depart_even |   282.6633   181.8575     1.55   0.120    -73.80277    639.1295
+      depart_late |   302.5496   641.0454     0.47   0.637    -953.9892    1559.088
+      depart_morn |   1626.375   200.3609     8.12   0.000      1233.64     2019.11
+        arr_after |   -1764.53    161.287   -10.94   0.000    -2080.675   -1448.385
+        arr_early |   1998.081   335.9938     5.95   0.000     1339.486    2656.676
+         arr_even |   -1116.94   135.4204    -8.25   0.000    -1382.383   -851.4974
+         arr_late |  -1770.758   189.4461    -9.35   0.000    -2142.099   -1399.417
+         arr_morn |  -484.7787   146.4621    -3.31   0.001     -771.865   -197.6924
+         capacity |  -14.79645   1.856802    -7.97   0.000    -18.43604   -11.15685
+      class_dummy |   42618.32   103.2209   412.88   0.000     42415.99    42820.65
+            _cons |   12525.45   478.3427    26.19   0.000     11587.83    13463.07
+-----------------------------------------------------------------------------------
+
+. 
+. *esttab Bangalore_Delhi2 using "Mumbai_Delhi_Regression.tex", p replace r2 label 
+. 
+. predict pred_price  if  train_noclass==0
+(option xb assumed; fitted values)
+(13,529 missing values generated)
+
+. gen error = pred_price-price
+(13,529 missing values generated)
+
+. gen error_square = error^2
+(13,529 missing values generated)
+
+. gen ape = abs(error/price)
+(13,529 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      5,786    2.96e+07    5.46e+07   .9280989   7.80e+08
+
+. *Bangalore Delhi Linear Regression, not cleaned data
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      5,786    .4130662     .414878   .0000546   2.935316
+
+. 
+. 
+. ************************
+. *Mumbai/Bangalore
+. clear 
+
+. use "averaged_data.dta"
+
+. set seed 9879879
+
+. ssc inst unique
+checking unique consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. keep if sourcedestination == "MumbaiBangalore"|sourcedestination == "BangaloreMumbai"
+(193,173 observations deleted)
+
+. drop _merge
+
+. 
+. count
+  18,711
+
+. 
+. randomtag, count(13098) gen(train_noclass)
+
+. 
+. 
+. eststo Bangalore_Mumbai2: regress price duration days_left days_left_squared days_left_cubed stops depart_after depart_early depart_even depart_late d
+> epart_morn arr_after arr_early arr_even arr_late arr_morn    capacity class_dummy if train_noclass==1
+
+      Source |       SS           df       MS      Number of obs   =    13,065
+-------------+----------------------------------   F(17, 13047)    =   7491.36
+       Model |  8.8733e+12        17  5.2196e+11   Prob > F        =    0.0000
+    Residual |  9.0905e+11    13,047  69674947.9   R-squared       =    0.9071
+-------------+----------------------------------   Adj R-squared   =    0.9070
+       Total |  9.7824e+12    13,064   748804028   Root MSE        =    8347.2
+
+-----------------------------------------------------------------------------------
+            price | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+------------------+----------------------------------------------------------------
+         duration |  -19.08803   17.63675    -1.08   0.279    -53.65863    15.48257
+        days_left |   -663.165   64.39466   -10.30   0.000    -789.3879   -536.9421
+days_left_squared |   18.12832   2.856071     6.35   0.000        12.53    23.72663
+  days_left_cubed |  -.1603179   .0370322    -4.33   0.000    -.2329064   -.0877294
+            stops |    14075.3    268.591    52.40   0.000     13548.83    14601.78
+     depart_after |  -1633.263   311.6606    -5.24   0.000    -2244.164   -1022.363
+     depart_early |  -714.1128   260.9018    -2.74   0.006    -1225.518   -202.7071
+      depart_even |  -1325.287   268.7123    -4.93   0.000    -1852.003   -798.5721
+      depart_late |   2323.107   1224.992     1.90   0.058    -78.05534    4724.269
+      depart_morn |   262.3759   274.7642     0.95   0.340    -276.2021    800.9539
+        arr_after |  -2587.346   264.3882    -9.79   0.000    -3105.585   -2069.106
+        arr_early |   691.1167   385.5079     1.79   0.073     -64.5349    1446.768
+         arr_even |  -1314.459   194.7983    -6.75   0.000    -1696.292   -932.6257
+         arr_late |  -2507.586   379.7388    -6.60   0.000     -3251.93   -1763.243
+         arr_morn |  -1066.147   210.4801    -5.07   0.000    -1478.719   -653.5754
+         capacity |  -15.31071   3.072858    -4.98   0.000    -21.33396   -9.287464
+      class_dummy |   51152.86   156.0838   327.73   0.000     50846.91    51458.81
+            _cons |   5804.689   785.5358     7.39   0.000     4264.925    7344.454
+-----------------------------------------------------------------------------------
+
+. 
+. *esttab Bangalore_Mumbai2 using "Mumbai_Delhi_Regression.tex", p replace r2 label 
+. 
+. predict pred_price  if  train_noclass==0
+(option xb assumed; fitted values)
+(13,102 missing values generated)
+
+. gen error = pred_price-price
+(13,102 missing values generated)
+
+. gen error_square = error^2
+(13,102 missing values generated)
+
+. gen ape = abs(error/price)
+(13,102 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      5,609    7.21e+07    1.57e+08   6.829239   1.74e+09
+
+. *Mumbai Bangalore Linear Regression, not cleaned data
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      5,609     .736698    1.152007   .0002672   9.494178
+
+. 
+. 
+. ***************************************
+. *CART
+. ***************************************
+. *Delhi and Mumbai 
+. clear 
+
+. use "averaged_data.dta"
+
+. set seed 28492234
+
+. ssc inst unique
+checking unique consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. keep if sourcedestination == "DelhiMumbai"|sourcedestination == "MumbaiDelhi"
+(189,758 observations deleted)
+
+. drop _merge
+
+. 
+. count
+  22,126
+
+. 
+. randomtag, count(15488) gen(train_noclass)
+
+. 
+. crtrees price class_dummy duration days_left stops depart_after depart_early depart_even depart_late depart_morn arr_after arr_early arr_even arr_late
+>  arr_morn    capacity if train_noclass==1, stop(50) generate(predicted) seed(123) rule(2)
+
+Regression Trees with learning and test samples (SE rule: 2)
+
+Learning Sample                                    Test Sample
+|T*|          = 28       
+Number of obs = 7557                               Number of obs   =      7468
+R-squared     = 0.9528                             R-squared       =    0.9529
+Avg Dep Var   = 19020.474                          Avg Dep Var     = 18875.932
+Root MSE      = 4285.198                           Root MSE        =  4273.043
+
+Terminal node results:
+
+
+Node 8: 
+     Characteristics:
+        class_dummy==0
+        1.83<=duration<=4.08
+        1<=days_left<=14
+                                                   Number of obs   =       432
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   6263.662   50.27941   124.58   0.000     6165.116    6362.208
+------------------------------------------------------------------------------
+
+
+
+Node 10: 
+     Characteristics:
+        class_dummy==0
+        1.83<=duration<=4.33
+        15<=days_left<=49
+                                                   Number of obs   =      1243
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   2649.961   17.77036   149.12   0.000     2615.131     2684.79
+------------------------------------------------------------------------------
+
+
+
+Node 11: 
+     Characteristics:
+        class_dummy==0
+        4.42<=duration<=30.08
+        15<=days_left<=49
+                                                   Number of obs   =      2428
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   5261.174   43.84811   119.99   0.000     5175.233    5347.115
+------------------------------------------------------------------------------
+
+
+
+Node 18: 
+     Characteristics:
+        class_dummy==0
+        4.17<=duration<=30.08
+        1<=days_left<=10
+                                                   Number of obs   =       487
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   12770.39   196.2301    65.08   0.000     12385.79       13155
+------------------------------------------------------------------------------
+
+
+
+Node 19: 
+     Characteristics:
+        class_dummy==0
+        4.17<=duration<=30.08
+        11<=days_left<=14
+                                                   Number of obs   =       308
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   9856.558   188.1065    52.40   0.000     9487.876    10225.24
+------------------------------------------------------------------------------
+
+
+
+Node 24: 
+     Characteristics:
+        class_dummy==1
+        1.83<=duration<=4.42
+        1<=days_left<=10
+        74<=capacity<=180
+                                                   Number of obs   =        70
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   39378.43   937.7555    41.99   0.000     37540.46     41216.4
+------------------------------------------------------------------------------
+
+
+
+Node 26: 
+     Characteristics:
+        class_dummy==1
+        1.83<=duration<=2.17
+        188<=capacity<=342
+                                                   Number of obs   =       153
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   27318.95   644.7031    42.37   0.000     26055.36    28582.55
+------------------------------------------------------------------------------
+
+
+
+Node 27: 
+     Characteristics:
+        class_dummy==1
+        2.25<=duration<=4.42
+        188<=capacity<=342
+                                                   Number of obs   =       203
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   22585.59   131.9594   171.16   0.000     22326.96    22844.23
+------------------------------------------------------------------------------
+
+
+
+Node 30: 
+     Characteristics:
+        class_dummy==1
+        15.42<=duration<=30.08
+        74<=capacity<=180
+                                                   Number of obs   =       335
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |    41413.5   263.3767   157.24   0.000     40897.29     41929.7
+------------------------------------------------------------------------------
+
+
+
+Node 44: 
+     Characteristics:
+        class_dummy==1
+        1.83<=duration<=2.08
+        11<=days_left<=49
+        74<=capacity<=180
+                                                   Number of obs   =        60
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   29336.53    655.349    44.76   0.000     28052.07    30620.99
+------------------------------------------------------------------------------
+
+
+
+Node 45: 
+     Characteristics:
+        class_dummy==1
+        2.17<=duration<=4.42
+        11<=days_left<=49
+        74<=capacity<=180
+                                                   Number of obs   =       275
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   34408.94   314.3707   109.45   0.000     33792.78    35025.09
+------------------------------------------------------------------------------
+
+
+
+Node 50: 
+     Characteristics:
+        class_dummy==1
+        4.5<=duration<=5.33
+        depart_morn==0
+                                                   Number of obs   =        59
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   39755.98     728.52    54.57   0.000     38328.11    41183.86
+------------------------------------------------------------------------------
+
+
+
+Node 51: 
+     Characteristics:
+        class_dummy==1
+        4.5<=duration<=5.33
+        depart_morn==1
+                                                   Number of obs   =        56
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   45922.38   1112.647    41.27   0.000     43741.63    48103.12
+------------------------------------------------------------------------------
+
+
+
+Node 52: 
+     Characteristics:
+        class_dummy==1
+        5.42<=duration<=6
+                                                   Number of obs   =       143
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   56428.57   527.5874   106.96   0.000     55394.52    57462.63
+------------------------------------------------------------------------------
+
+
+
+Node 56: 
+     Characteristics:
+        class_dummy==1
+        15.42<=duration<=23.83
+        188<=capacity<=342
+                                                   Number of obs   =       113
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   49074.56   646.5494    75.90   0.000     47807.34    50341.77
+------------------------------------------------------------------------------
+
+
+
+Node 57: 
+     Characteristics:
+        class_dummy==1
+        23.92<=duration<=30.08
+        188<=capacity<=342
+                                                   Number of obs   =       103
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   44091.74   815.4744    54.07   0.000     42493.44    45690.04
+------------------------------------------------------------------------------
+
+
+
+Node 82: 
+     Characteristics:
+        class_dummy==1
+        6.08<=duration<=15.25
+        1<=days_left<=4
+                                                   Number of obs   =        52
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   57848.87   1515.769    38.16   0.000     54878.01    60819.72
+------------------------------------------------------------------------------
+
+
+
+Node 129: 
+     Characteristics:
+        class_dummy==1
+        12.83<=duration<=13.33
+        5<=days_left<=49
+                                                   Number of obs   =        75
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   57346.32   701.9944    81.69   0.000     55970.44     58722.2
+------------------------------------------------------------------------------
+
+
+
+Node 130: 
+     Characteristics:
+        class_dummy==1
+        13.42<=duration<=13.67
+        5<=days_left<=49
+                                                   Number of obs   =        71
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   44005.44   837.1514    52.57   0.000     42364.65    45646.22
+------------------------------------------------------------------------------
+
+
+
+Node 131: 
+     Characteristics:
+        class_dummy==1
+        13.75<=duration<=15.25
+        5<=days_left<=49
+                                                   Number of obs   =       115
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   50811.02    698.807    72.71   0.000     49441.38    52180.65
+------------------------------------------------------------------------------
+
+
+
+Node 144: 
+     Characteristics:
+        class_dummy==1
+        6.08<=duration<=6.33
+        5<=days_left<=49
+                                                   Number of obs   =        70
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |      46405   1059.897    43.78   0.000     44327.64    48482.36
+------------------------------------------------------------------------------
+
+
+
+Node 174: 
+     Characteristics:
+        class_dummy==1
+        6.42<=duration<=7.75
+        5<=days_left<=49
+        74<=capacity<=180
+                                                   Number of obs   =       133
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   56804.67   568.8726    99.85   0.000      55689.7    57919.64
+------------------------------------------------------------------------------
+
+
+
+Node 176: 
+     Characteristics:
+        class_dummy==1
+        6.42<=duration<=12.75
+        5<=days_left<=49
+        depart_after==0
+        188<=capacity<=342
+                                                   Number of obs   =       192
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |    47878.1   459.4176   104.21   0.000     46977.66    48778.55
+------------------------------------------------------------------------------
+
+
+
+Node 177: 
+     Characteristics:
+        class_dummy==1
+        6.42<=duration<=12.75
+        5<=days_left<=49
+        depart_after==1
+        188<=capacity<=342
+                                                   Number of obs   =        58
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   54534.21   555.9036    98.10   0.000     53444.66    55623.76
+------------------------------------------------------------------------------
+
+
+
+Node 198: 
+     Characteristics:
+        class_dummy==1
+        7.83<=duration<=10.5
+        5<=days_left<=49
+        74<=capacity<=169
+                                                   Number of obs   =        71
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   52236.27   1356.663    38.50   0.000     49577.26    54895.28
+------------------------------------------------------------------------------
+
+
+
+Node 199: 
+     Characteristics:
+        class_dummy==1
+        7.83<=duration<=10.5
+        5<=days_left<=49
+        capacity==180
+                                                   Number of obs   =        66
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   43439.09   972.3966    44.67   0.000     41533.23    45344.95
+------------------------------------------------------------------------------
+
+
+
+Node 200: 
+     Characteristics:
+        class_dummy==1
+        10.75<=duration<=11.67
+        5<=days_left<=49
+        74<=capacity<=180
+                                                   Number of obs   =        62
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   57109.66   843.9639    67.67   0.000     55455.52     58763.8
+------------------------------------------------------------------------------
+
+
+
+Node 201: 
+     Characteristics:
+        class_dummy==1
+        11.75<=duration<=12.75
+        5<=days_left<=49
+        74<=capacity<=180
+                                                   Number of obs   =       124
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   52143.25   498.5865   104.58   0.000     51166.04    53120.46
+------------------------------------------------------------------------------
+
+
+
+. 
+. *esttab Mumbai_Delhi2 using "Mumbai_Delhi_Regression.tex", p replace r2 label 
+. 
+. predict pred_price  if  train_noclass==0
+
+. gen error = pred_price-price
+(15,488 missing values generated)
+
+. gen error_square = error^2
+(15,488 missing values generated)
+
+. gen ape = abs(error/price)
+(15,488 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      6,638    1.92e+07    6.83e+07    5.72443   2.98e+09
+
+. *Mumbai Delhi CART, not cleaned data
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      6,638    .2005234    .2613031   .0001233   1.252215
+
+. 
+. 
+. **************************
+. *Delhi/Bangalore
+. clear 
+
+. use "averaged_data.dta"
+
+. set seed 28492234
+
+. ssc inst unique
+checking unique consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. keep if sourcedestination == "DelhiBangalore"|sourcedestination == "BangaloreDelhi"
+(192,569 observations deleted)
+
+. drop _merge
+
+. 
+. count
+  19,315
+
+. 
+. randomtag, count(13521) gen(train_noclass)
+
+. 
+. crtrees price class_dummy duration days_left stops depart_after depart_early depart_even depart_late depart_morn arr_after arr_early arr_even arr_late
+>  arr_morn    capacity if train_noclass==1, stop(50) generate(predicted) seed(123) rule(2)
+
+Regression Trees with learning and test samples (SE rule: 2)
+
+Learning Sample                                    Test Sample
+|T*|          = 20       
+Number of obs = 6796                               Number of obs   =      6701
+R-squared     = 0.9760                             R-squared       =    0.9745
+Avg Dep Var   = 19435.854                          Avg Dep Var     = 19432.767
+Root MSE      = 3249.073                           Root MSE        =  3342.612
+
+Terminal node results:
+
+
+Node 5: 
+     Characteristics:
+        class_dummy==0
+        15<=days_left<=49
+                                                   Number of obs   =      3534
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   4499.728   28.82843   156.09   0.000     4443.225     4556.23
+------------------------------------------------------------------------------
+
+
+
+Node 6: 
+     Characteristics:
+        class_dummy==1
+        2.5<=duration<=2.92
+                                                   Number of obs   =       414
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   33580.58   159.1661   210.98   0.000     33268.62    33892.54
+------------------------------------------------------------------------------
+
+
+
+Node 8: 
+     Characteristics:
+        class_dummy==0
+        2.5<=duration<=3
+        1<=days_left<=14
+                                                   Number of obs   =       266
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |    7841.06    90.0765    87.05   0.000     7664.513    8017.607
+------------------------------------------------------------------------------
+
+
+
+Node 18: 
+     Characteristics:
+        class_dummy==0
+        4.33<=duration<=26.92
+        1<=days_left<=3
+                                                   Number of obs   =        94
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |    14461.1   419.3699    34.48   0.000     13639.15    15283.05
+------------------------------------------------------------------------------
+
+
+
+Node 19: 
+     Characteristics:
+        class_dummy==0
+        4.33<=duration<=26.92
+        4<=days_left<=14
+                                                   Number of obs   =       748
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |    10196.6   93.01184   109.63   0.000      10014.3     10378.9
+------------------------------------------------------------------------------
+
+
+
+Node 26: 
+     Characteristics:
+        class_dummy==1
+        3<=duration<=26.92
+        1<=days_left<=7
+        74<=capacity<=180
+                                                   Number of obs   =       118
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   60134.42   863.1289    69.67   0.000     58442.72    61826.13
+------------------------------------------------------------------------------
+
+
+
+Node 28: 
+     Characteristics:
+        class_dummy==1
+        3<=duration<=26.92
+        188<=capacity<=194
+                                                   Number of obs   =       160
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   42908.93   167.9487   255.49   0.000     42579.75     43238.1
+------------------------------------------------------------------------------
+
+
+
+Node 46: 
+     Characteristics:
+        class_dummy==1
+        3<=duration<=14.92
+        210<=capacity<=342
+                                                   Number of obs   =        74
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   57584.12   1015.817    56.69   0.000     55593.16    59575.09
+------------------------------------------------------------------------------
+
+
+
+Node 47: 
+     Characteristics:
+        class_dummy==1
+        15<=duration<=26.92
+        210<=capacity<=342
+                                                   Number of obs   =        73
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   42827.42    119.121   359.53   0.000     42593.95     43060.9
+------------------------------------------------------------------------------
+
+
+
+Node 57: 
+     Characteristics:
+        class_dummy==1
+        7.5<=duration<=8.5
+        8<=days_left<=49
+        74<=capacity<=180
+                                                   Number of obs   =       101
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   48887.73    562.514    86.91   0.000     47785.23    49990.24
+------------------------------------------------------------------------------
+
+
+
+Node 73: 
+     Characteristics:
+        class_dummy==1
+        6.67<=duration<=7.42
+        8<=days_left<=49
+        74<=capacity<=180
+                                                   Number of obs   =        61
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   55687.43   334.2208   166.62   0.000     55032.37    56342.49
+------------------------------------------------------------------------------
+
+
+
+Node 77: 
+     Characteristics:
+        class_dummy==1
+        8.58<=duration<=26.92
+        8<=days_left<=49
+        depart_early==1
+        arr_morn==0
+        74<=capacity<=180
+                                                   Number of obs   =       144
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   57572.56   335.0213   171.85   0.000     56915.93    58229.19
+------------------------------------------------------------------------------
+
+
+
+Node 78: 
+     Characteristics:
+        class_dummy==1
+        8.58<=duration<=14.17
+        8<=days_left<=49
+        arr_morn==1
+        74<=capacity<=180
+                                                   Number of obs   =       206
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   49506.86   462.5534   107.03   0.000     48600.28    50413.45
+------------------------------------------------------------------------------
+
+
+
+Node 79: 
+     Characteristics:
+        class_dummy==1
+        14.5<=duration<=26.92
+        8<=days_left<=49
+        arr_morn==1
+        74<=capacity<=180
+                                                   Number of obs   =        84
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   58192.81   257.6071   225.90   0.000     57687.91    58697.71
+------------------------------------------------------------------------------
+
+
+
+Node 95: 
+     Characteristics:
+        class_dummy==1
+        3<=duration<=6.58
+        8<=days_left<=49
+        depart_morn==1
+        74<=capacity<=180
+                                                   Number of obs   =        80
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |    48068.8   517.6242    92.86   0.000     47054.28    49083.32
+------------------------------------------------------------------------------
+
+
+
+Node 96: 
+     Characteristics:
+        class_dummy==1
+        8.58<=duration<=11.92
+        8<=days_left<=49
+        depart_early==0
+        arr_morn==0
+        74<=capacity<=180
+                                                   Number of obs   =       224
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   53368.89   321.0415   166.24   0.000     52739.66    53998.12
+------------------------------------------------------------------------------
+
+
+
+Node 114: 
+     Characteristics:
+        class_dummy==1
+        3<=duration<=5.75
+        8<=days_left<=49
+        depart_morn==0
+        74<=capacity<=180
+                                                   Number of obs   =       101
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   53267.77   702.8833    75.78   0.000     51890.15     54645.4
+------------------------------------------------------------------------------
+
+
+
+Node 115: 
+     Characteristics:
+        class_dummy==1
+        5.83<=duration<=6.58
+        8<=days_left<=49
+        depart_morn==0
+        74<=capacity<=180
+                                                   Number of obs   =        91
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   49577.88   669.2898    74.08   0.000      48266.1    50889.66
+------------------------------------------------------------------------------
+
+
+
+Node 118: 
+     Characteristics:
+        class_dummy==1
+        12<=duration<=15
+        8<=days_left<=49
+        depart_early==0
+        arr_morn==0
+        74<=capacity<=180
+                                                   Number of obs   =       173
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   57034.94   312.4157   182.56   0.000     56422.62    57647.27
+------------------------------------------------------------------------------
+
+
+
+Node 119: 
+     Characteristics:
+        class_dummy==1
+        15.08<=duration<=26.92
+        8<=days_left<=49
+        depart_early==0
+        arr_morn==0
+        74<=capacity<=180
+                                                   Number of obs   =        50
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   51803.24   685.3149    75.59   0.000     50460.05    53146.43
+------------------------------------------------------------------------------
+
+
+
+. 
+. *esttab Bangalore_Delhi2 using "Mumbai_Delhi_Regression.tex", p replace r2 label 
+. 
+. predict pred_price  if  train_noclass==0
+
+. gen error = pred_price-price
+(13,521 missing values generated)
+
+. gen error_square = error^2
+(13,521 missing values generated)
+
+. gen ape = abs(error/price)
+(13,521 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      5,794    1.16e+07    3.99e+07    .074235   6.76e+08
+
+. *Bangalore Delhi CART, not cleaned data
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      5,794    .1435097    .1697644   .0000605   .9481471
+
+. 
+. 
+. ************************
+. *Mumbai/Bangalore
+. clear 
+
+. use "averaged_data.dta"
+
+. set seed 28492234
+
+. ssc inst unique
+checking unique consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. keep if sourcedestination == "MumbaiBangalore"|sourcedestination == "BangaloreMumbai"
+(193,173 observations deleted)
+
+. drop _merge
+
+. 
+. count
+  18,711
+
+. 
+. randomtag, count(13098) gen(train_noclass)
+
+. 
+. 
+. crtrees price class_dummy duration days_left stops depart_after depart_early depart_even depart_late depart_morn arr_after arr_early arr_even arr_late
+>  arr_morn    capacity if train_noclass==1, stop(50) generate(predicted) seed(123) rule(2)
+
+Regression Trees with learning and test samples (SE rule: 2)
+
+Learning Sample                                    Test Sample
+|T*|          = 19       
+Number of obs = 6584                               Number of obs   =      6486
+R-squared     = 0.9781                             R-squared       =    0.9789
+Avg Dep Var   = 25685.635                          Avg Dep Var     = 26472.257
+Root MSE      = 4024.494                           Root MSE        =  3993.189
+
+Terminal node results:
+
+
+Node 6: 
+     Characteristics:
+        class_dummy==1
+        1.58<=duration<=4.58
+                                                   Number of obs   =       300
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   21943.87   243.2837    90.20   0.000     21467.05     22420.7
+------------------------------------------------------------------------------
+
+
+
+Node 8: 
+     Characteristics:
+        class_dummy==0
+        1.58<=duration<=4.08
+        1<=days_left<=15
+                                                   Number of obs   =       218
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   5782.596   108.0837    53.50   0.000     5570.756    5994.436
+------------------------------------------------------------------------------
+
+
+
+Node 10: 
+     Characteristics:
+        class_dummy==0
+        1.58<=duration<=2
+        16<=days_left<=49
+                                                   Number of obs   =       545
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   2172.943   5.636502   385.51   0.000     2161.896     2183.99
+------------------------------------------------------------------------------
+
+
+
+Node 11: 
+     Characteristics:
+        class_dummy==0
+        3.08<=duration<=26.5
+        16<=days_left<=49
+                                                   Number of obs   =      2474
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   5674.646   35.35145   160.52   0.000     5605.358    5743.933
+------------------------------------------------------------------------------
+
+
+
+Node 18: 
+     Characteristics:
+        class_dummy==0
+        4.17<=duration<=26.5
+        1<=days_left<=3
+                                                   Number of obs   =        86
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   13430.58   572.2677    23.47   0.000     12308.96    14552.21
+------------------------------------------------------------------------------
+
+
+
+Node 19: 
+     Characteristics:
+        class_dummy==0
+        4.17<=duration<=26.5
+        4<=days_left<=15
+                                                   Number of obs   =       765
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |    8924.81   104.6174    85.31   0.000     8719.764    9129.857
+------------------------------------------------------------------------------
+
+
+
+Node 27: 
+     Characteristics:
+        class_dummy==1
+        16.67<=duration<=26.5
+        78<=capacity<=180
+                                                   Number of obs   =        80
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   50654.35   677.6247    74.75   0.000     49326.23    51982.47
+------------------------------------------------------------------------------
+
+
+
+Node 28: 
+     Characteristics:
+        class_dummy==1
+        4.67<=duration<=26.5
+        188<=capacity<=194
+                                                   Number of obs   =       542
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   55137.21   97.76992   563.95   0.000     54945.58    55328.83
+------------------------------------------------------------------------------
+
+
+
+Node 42: 
+     Characteristics:
+        class_dummy==1
+        4.67<=duration<=16.33
+        1<=days_left<=7
+        78<=capacity<=180
+                                                   Number of obs   =       131
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   73781.37   980.5499    75.24   0.000     71859.53    75703.22
+------------------------------------------------------------------------------
+
+
+
+Node 47: 
+     Characteristics:
+        class_dummy==1
+        4.67<=duration<=26.5
+        256<=capacity<=342
+                                                   Number of obs   =        76
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   54668.28   97.21886   562.32   0.000     54477.73    54858.82
+------------------------------------------------------------------------------
+
+
+
+Node 70: 
+     Characteristics:
+        class_dummy==1
+        4.67<=duration<=26.5
+        depart_morn==0
+        210<=capacity<=220
+                                                   Number of obs   =       144
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |    70924.7   421.6542   168.21   0.000     70098.27    71751.13
+------------------------------------------------------------------------------
+
+
+
+Node 71: 
+     Characteristics:
+        class_dummy==1
+        4.67<=duration<=26.5
+        depart_morn==1
+        210<=capacity<=220
+                                                   Number of obs   =        50
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   55222.52   306.0838   180.42   0.000     54622.61    55822.43
+------------------------------------------------------------------------------
+
+
+
+Node 91: 
+     Characteristics:
+        class_dummy==1
+        4.67<=duration<=16.33
+        8<=days_left<=49
+        depart_early==0
+        depart_even==1
+        78<=capacity<=180
+                                                   Number of obs   =       115
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   71140.78   670.3276   106.13   0.000     69826.96     72454.6
+------------------------------------------------------------------------------
+
+
+
+Node 93: 
+     Characteristics:
+        class_dummy==1
+        4.67<=duration<=16.33
+        8<=days_left<=49
+        depart_early==1
+        arr_even==1
+        78<=capacity<=180
+                                                   Number of obs   =       156
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   60177.22    514.863   116.88   0.000      59168.1    61186.33
+------------------------------------------------------------------------------
+
+
+
+Node 118: 
+     Characteristics:
+        class_dummy==1
+        4.67<=duration<=12.92
+        8<=days_left<=49
+        depart_early==0
+        depart_even==0
+        78<=capacity<=180
+                                                   Number of obs   =       484
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   67444.97   318.1353   212.00   0.000     66821.44     68068.5
+------------------------------------------------------------------------------
+
+
+
+Node 119: 
+     Characteristics:
+        class_dummy==1
+        13<=duration<=16.33
+        8<=days_left<=49
+        depart_early==0
+        depart_even==0
+        78<=capacity<=180
+                                                   Number of obs   =       186
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   64544.96   577.5585   111.75   0.000     63412.96    65676.95
+------------------------------------------------------------------------------
+
+
+
+Node 123: 
+     Characteristics:
+        class_dummy==1
+        14.33<=duration<=16.33
+        8<=days_left<=49
+        depart_early==1
+        arr_even==0
+        78<=capacity<=180
+                                                   Number of obs   =        84
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   61904.48    873.997    70.83   0.000     60191.47    63617.48
+------------------------------------------------------------------------------
+
+
+
+Node 146: 
+     Characteristics:
+        class_dummy==1
+        4.67<=duration<=8
+        8<=days_left<=49
+        depart_early==1
+        arr_even==0
+        78<=capacity<=180
+                                                   Number of obs   =        66
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   63656.24   655.8532    97.06   0.000     62370.79    64941.69
+------------------------------------------------------------------------------
+
+
+
+Node 147: 
+     Characteristics:
+        class_dummy==1
+        8.08<=duration<=14.25
+        8<=days_left<=49
+        depart_early==1
+        arr_even==0
+        78<=capacity<=180
+                                                   Number of obs   =        82
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   69690.44   458.3641   152.04   0.000     68792.06    70588.82
+------------------------------------------------------------------------------
+
+
+
+. 
+. *esttab Bangalore_Mumbai2 using "Mumbai_Delhi_Regression.tex", p replace r2 label 
+. 
+. predict pred_price  if  train_noclass==0
+
+. gen error = pred_price-price
+(13,098 missing values generated)
+
+. gen error_square = error^2
+(13,098 missing values generated)
+
+. gen ape = abs(error/price)
+(13,098 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      5,613    1.49e+07    5.24e+07   .1253188   1.16e+09
+
+. *Mumbai Bangalore CART, not cleaned data
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      5,613    .1902358    .3126051   .0000624   1.736088
+
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. ***************************************************
+. *Remove outliers*
+. ***************************************************
+. *Delhi Mumbai
+. clear
+
+. use "averaged_data.dta"
+
+. set seed 739292
+
+. ssc inst unique
+checking unique consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. keep if sourcedestination == "MumbaiDelhi"|sourcedestination == "DelhiMumbai"
+(189,758 observations deleted)
+
+. drop _merge
+
+. 
+. 
+. ******Economy*******
+. *50-41
+. graph hbox price if days_left<=50 & days_left>=41 & class_dummy ==0
+
+. histogram price if days_left<=50 & days_left>=41 & class_dummy ==0, width(500)
+(bin=38, start=2281, width=500)
+
+. *histogram price if days_left<=50 & days_left>=41 & class_dummy ==0 & price<=5000, width(100)
+. drop if price <=2450 & days_left<=50 & days_left>=41 & class_dummy ==0
+(552 observations deleted)
+
+. tabstat price if days_left<=50 & days_left>=41 & class_dummy ==0, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  4852.801      3279      6122
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=50 & days_left>=41 & class_dummy ==0, p(25)
+(20,098 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=50 & days_left>=41 & class_dummy ==0, p(75)
+(20,098 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=50 & days_left>=41 & class_dummy ==0
+(14 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *40-31
+. graph hbox price if days_left<=40 & days_left>=31 & class_dummy ==0
+
+. histogram price if days_left<=40 & days_left>=31 & class_dummy ==0, width(500)
+(bin=45, start=2336, width=500)
+
+. *histogram price if days_left<=40 & days_left>=31 & class_dummy ==0 & price<=5000, width(100)
+. drop if price <=2500 & days_left<=40 & days_left>=31 & class_dummy ==0
+(970 observations deleted)
+
+. tabstat price if days_left<=40 & days_left>=31 & class_dummy ==0, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  5244.583      3819      6122
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=40 & days_left>=31 & class_dummy ==0, p(25)
+(18,231 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=40 & days_left>=31 & class_dummy ==0, p(75)
+(18,231 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=40 & days_left>=31 & class_dummy ==0
+(81 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. 
+. *30-21
+. graph hbox price if days_left<=30 & days_left>=21 & class_dummy ==0
+
+. histogram price if days_left<=30 & days_left>=21 & class_dummy ==0, width(500)
+(bin=39, start=2336, width=500)
+
+. *histogram price if days_left<=30 & days_left>=21 & class_dummy ==0 & price<=5000, width(100)
+. drop if price <=2500 & days_left<=30 & days_left>=21 & class_dummy ==0
+(987 observations deleted)
+
+. tabstat price if days_left<=30 & days_left>=21 & class_dummy ==0, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  5129.006      3549      6122
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=30 & days_left>=21 & class_dummy ==0, p(25)
+(17,152 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=30 & days_left>=21 & class_dummy ==0, p(75)
+(17,152 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=30 & days_left>=21 & class_dummy ==0
+(48 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *20-11
+. graph hbox price if days_left<=20 & days_left>=11 & class_dummy ==0
+
+. histogram price if days_left<=20 & days_left>=11 & class_dummy ==0, width(500)
+(bin=53, start=2336, width=500)
+
+. *histogram price if days_left<=20 & days_left>=11 & class_dummy ==0 & price<=5000, width(100)
+. drop if price <=2500 & days_left<=20 & days_left>=11 & class_dummy ==0
+(476 observations deleted)
+
+. tabstat price if days_left<=20 & days_left>=11 & class_dummy ==0, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  7053.917      5227      8589
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=20 & days_left>=11 & class_dummy ==0, p(25)
+(16,205 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=20 & days_left>=11 & class_dummy ==0, p(75)
+(16,205 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=20 & days_left>=11 & class_dummy ==0
+(130 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *10-1
+. graph hbox price if days_left<=10 & days_left>=1 & class_dummy ==0
+
+. histogram price if days_left<=10 & days_left>=1 & class_dummy ==0, width(500)
+(bin=52, start=5939, width=500)
+
+. *histogram price if days_left<=10 & days_left>=1 & class_dummy ==0 & price<=10000, width(100)
+. drop if price <=6100 & days_left<=10 & days_left>=1 & class_dummy ==0
+(718 observations deleted)
+
+. tabstat price if days_left<=10 & days_left>=1 & class_dummy ==0, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  12498.39      9840     14565
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=10 & days_left>=1 & class_dummy ==0, p(25)
+(16,620 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=10 & days_left>=1 & class_dummy ==0, p(75)
+(16,620 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=10 & days_left>=1 & class_dummy ==0
+(49 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. 
+. ******Buiness*******
+. *50-41
+. graph hbox price if days_left<=50 & days_left>=41 & class_dummy ==1
+
+. histogram price if days_left<=50 & days_left>=41 & class_dummy ==1, width(500)
+(bin=128, start=22140, width=500)
+
+. *histogram price if days_left<=50 & days_left>=41 & class_dummy ==1 & price<=30000, width(100)
+. drop if price <=24000 & days_left<=50 & days_left>=41 & class_dummy ==1
+(152 observations deleted)
+
+. tabstat price if days_left<=50 & days_left>=41 & class_dummy ==1, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  45766.81     36712     53164
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=50 & days_left>=41 & class_dummy ==1, p(25)
+(16,866 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=50 & days_left>=41 & class_dummy ==1, p(75)
+(16,866 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=50 & days_left>=41 & class_dummy ==1
+(2 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *40-31
+. graph hbox price if days_left<=40 & days_left>=31 & class_dummy ==1
+
+. histogram price if days_left<=40 & days_left>=31 & class_dummy ==1, width(500)
+(bin=137, start=22140, width=500)
+
+. *histogram price if days_left<=40 & days_left>=31 & class_dummy ==1 & price<=30000, width(100)
+. drop if price <=24000 & days_left<=40 & days_left>=31 & class_dummy ==1
+(212 observations deleted)
+
+. tabstat price if days_left<=40 & days_left>=31 & class_dummy ==1, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  46027.88     39622     53152
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=40 & days_left>=31 & class_dummy ==1, p(25)
+(16,191 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=40 & days_left>=31 & class_dummy ==1, p(75)
+(16,191 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=40 & days_left>=31 & class_dummy ==1
+(8 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. 
+. *30-21
+. graph hbox price if days_left<=30 & days_left>=21 & class_dummy ==1
+
+. histogram price if days_left<=30 & days_left>=21 & class_dummy ==1, width(500)
+(bin=128, start=22140, width=500)
+
+. *histogram price if days_left<=30 & days_left>=21 & class_dummy ==1& price<=30000, width(100)
+. drop if price <=24000 & days_left<=30 & days_left>=21 & class_dummy ==1
+(216 observations deleted)
+
+. tabstat price if days_left<=30 & days_left>=21 & class_dummy ==1, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  46162.93   39734.5     53164
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=30 & days_left>=21 & class_dummy ==1, p(25)
+(15,971 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=30 & days_left>=21 & class_dummy ==1, p(75)
+(15,971 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=30 & days_left>=21 & class_dummy ==1
+(4 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *20-11
+. graph hbox price if days_left<=20 & days_left>=11 & class_dummy ==1
+
+. histogram price if days_left<=20 & days_left>=11 & class_dummy ==1, width(500)
+(bin=132, start=22140, width=500)
+
+. *histogram price if days_left<=20 & days_left>=11 & class_dummy ==1 & price<=5000, width(100)
+. drop if price <=24000 & days_left<=20 & days_left>=11 & class_dummy ==1
+(207 observations deleted)
+
+. tabstat price if days_left<=20 & days_left>=11 & class_dummy ==1, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  46668.46     39859     53164
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=20 & days_left>=11 & class_dummy ==1, p(25)
+(15,768 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=20 & days_left>=11 & class_dummy ==1, p(75)
+(15,768 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=20 & days_left>=11 & class_dummy ==1
+(9 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *10-1
+. graph hbox price if days_left<=10 & days_left>=1 & class_dummy ==1
+
+. histogram price if days_left<=10 & days_left>=1 & class_dummy ==1, width(500)
+(bin=179, start=22140, width=500)
+
+. *histogram price if days_left<=10 & days_left>=1 & class_dummy ==1 & price<=30000, width(100)
+. drop if price <=24000 & days_left<=10 & days_left>=1 & class_dummy ==1
+(117 observations deleted)
+
+. tabstat price if days_left<=10 & days_left>=1 & class_dummy ==1, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  48097.75     41101     53164
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=10 & days_left>=1 & class_dummy ==1, p(25)
+(15,882 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=10 & days_left>=1 & class_dummy ==1, p(75)
+(15,882 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=10 & days_left>=1 & class_dummy ==1
+(53 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. 
+. 
+. count 
+  17,121
+
+. 
+. randomtag, count(11985) gen(train_noclass)
+
+. 
+. eststo Delhi_Mumbai2: regress price duration days_left days_left_squared days_left_cubed stops depart_after depart_early depart_even depart_late depar
+> t_morn arr_after arr_early arr_even arr_late arr_morn    capacity class_dummy if train_noclass==1
+
+      Source |       SS           df       MS      Number of obs   =    11,520
+-------------+----------------------------------   F(17, 11502)    =   9082.46
+       Model |  4.4824e+12        17  2.6367e+11   Prob > F        =    0.0000
+    Residual |  3.3391e+11    11,502  29030663.6   R-squared       =    0.9307
+-------------+----------------------------------   Adj R-squared   =    0.9306
+       Total |  4.8163e+12    11,519   418117861   Root MSE        =      5388
+
+-----------------------------------------------------------------------------------
+            price | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+------------------+----------------------------------------------------------------
+         duration |  -143.1768   9.265294   -15.45   0.000    -161.3383   -125.0152
+        days_left |  -505.5068   43.50938   -11.62   0.000    -590.7926    -420.221
+days_left_squared |   11.14265   1.944013     5.73   0.000     7.332056    14.95325
+  days_left_cubed |  -.0711731   .0254249    -2.80   0.005    -.1210103   -.0213359
+            stops |   7908.516   158.1004    50.02   0.000     7598.612    8218.419
+     depart_after |  -707.0552   212.3777    -3.33   0.001    -1123.352   -290.7587
+     depart_early |    446.005    205.094     2.17   0.030     43.98595    848.0241
+      depart_even |  -1620.704   196.8937    -8.23   0.000    -2006.649   -1234.759
+      depart_late |  -2014.388   747.7285    -2.69   0.007    -3480.063   -548.7125
+      depart_morn |  -777.7936   201.5771    -3.86   0.000    -1172.919   -382.6682
+        arr_after |  -1979.287   149.0838   -13.28   0.000    -2271.517   -1687.057
+        arr_early |  -3653.108   366.0377    -9.98   0.000    -4370.604   -2935.612
+         arr_even |   -2118.14    145.652   -14.54   0.000    -2403.643   -1832.637
+         arr_late |  -3043.925   309.2418    -9.84   0.000    -3650.092   -2437.759
+         arr_morn |  -1709.883   153.3613   -11.15   0.000    -2010.498   -1409.269
+         capacity |   3.477794    2.18055     1.59   0.111    -.7964552    7.752043
+      class_dummy |   39675.85   105.6021   375.71   0.000     39468.85    39882.85
+            _cons |     8465.3   557.5184    15.18   0.000     7372.469    9558.131
+-----------------------------------------------------------------------------------
+
+. 
+. predict pred_price  if  train_noclass==0
+(option xb assumed; fitted values)
+(12,196 missing values generated)
+
+. gen error = pred_price-price
+(12,196 missing values generated)
+
+. gen error_square = error^2
+(12,196 missing values generated)
+
+. gen ape = abs(error/price)
+(12,196 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      4,925    2.83e+07    6.02e+07   .1235962   8.05e+08
+
+. *Mumbai Delhi Linear Regression, cleaned data
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      4,925    .3382046    .3505177   .0000464   2.460324
+
+. save "delmumbaiclean.dta", replace
+file delmumbaiclean.dta saved
+
+. 
+. ***************************************************
+. *Delhi Bangalore
+. clear
+
+. use "averaged_data.dta"
+
+. set seed 739292
+
+. ssc inst unique
+checking unique consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. keep if sourcedestination == "BangaloreDelhi"|sourcedestination == "DelhiBangalore"
+(192,569 observations deleted)
+
+. drop _merge
+
+. 
+. 
+. ******Economy*******
+. *50-41
+. graph hbox price if days_left<=50 & days_left>=41 & class_dummy ==0
+
+. histogram price if days_left<=50 & days_left>=41 & class_dummy ==0, width(500)
+(bin=25, start=2723, width=500)
+
+. *histogram price if days_left<=50 & days_left>=41 & class_dummy ==0 & price<=5000, width(100)
+. tabstat price if days_left<=50 & days_left>=41 & class_dummy ==0, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  4274.194      3782      4500
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=50 & days_left>=41 & class_dummy ==0, p(25)
+(17,324 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=50 & days_left>=41 & class_dummy ==0, p(75)
+(17,324 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=50 & days_left>=41 & class_dummy ==0
+(136 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *40-31
+. graph hbox price if days_left<=40 & days_left>=31 & class_dummy ==0
+
+. histogram price if days_left<=40 & days_left>=31 & class_dummy ==0, width(500)
+(bin=37, start=2723, width=500)
+
+. *histogram price if days_left<=40 & days_left>=31 & class_dummy ==0 & price<=5000, width(100)
+. tabstat price if days_left<=40 & days_left>=31 & class_dummy ==0, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  4394.434      3782      4500
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=40 & days_left>=31 & class_dummy ==0, p(25)
+(16,031 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=40 & days_left>=31 & class_dummy ==0, p(75)
+(16,031 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=40 & days_left>=31 & class_dummy ==0
+(299 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. 
+. *30-21
+. graph hbox price if days_left<=30 & days_left>=21 & class_dummy ==0
+
+. histogram price if days_left<=30 & days_left>=21 & class_dummy ==0, width(500)
+(bin=31, start=2723, width=500)
+
+. *histogram price if days_left<=30 & days_left>=21 & class_dummy ==0 & price<=5000, width(100)
+. tabstat price if days_left<=30 & days_left>=21 & class_dummy ==0, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  4442.945      3671      4501
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=30 & days_left>=21 & class_dummy ==0, p(25)
+(15,741 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=30 & days_left>=21 & class_dummy ==0, p(75)
+(15,741 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=30 & days_left>=21 & class_dummy ==0
+(236 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *20-11
+. graph hbox price if days_left<=20 & days_left>=11 & class_dummy ==0
+
+. histogram price if days_left<=20 & days_left>=11 & class_dummy ==0, width(500)
+(bin=55, start=2723, width=500)
+
+. *histogram price if days_left<=20 & days_left>=11 & class_dummy ==0 & price<=5000, width(100)
+. drop if price <=2500 & days_left<=20 & days_left>=11 & class_dummy ==0
+(0 observations deleted)
+
+. tabstat price if days_left<=20 & days_left>=11 & class_dummy ==0, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  6753.158      4272      8790
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=20 & days_left>=11 & class_dummy ==0, p(25)
+(15,602 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=20 & days_left>=11 & class_dummy ==0, p(75)
+(15,602 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=20 & days_left>=11 & class_dummy ==0
+(36 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *10-1
+. graph hbox price if days_left<=10 & days_left>=1 & class_dummy ==0
+
+. histogram price if days_left<=10 & days_left>=1 & class_dummy ==0, width(500)
+(bin=54, start=7423, width=500)
+
+. *histogram price if days_left<=10 & days_left>=1 & class_dummy ==0 & price<=10000, width(100)
+. drop if price <=7500 & days_left<=10 & days_left>=1 & class_dummy ==0
+(643 observations deleted)
+
+. tabstat price if days_left<=10 & days_left>=1 & class_dummy ==0, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  12094.75   10580.5   12530.5
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=10 & days_left>=1 & class_dummy ==0, p(25)
+(16,617 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=10 & days_left>=1 & class_dummy ==0, p(75)
+(16,617 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=10 & days_left>=1 & class_dummy ==0
+(198 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. 
+. ******Buiness*******
+. *50-41
+. graph hbox price if days_left<=50 & days_left>=41 & class_dummy ==1
+
+. histogram price if days_left<=50 & days_left>=41 & class_dummy ==1, width(500)
+(bin=82, start=32859, width=500)
+
+. *histogram price if days_left<=50 & days_left>=41 & class_dummy ==1 & price<=50000, width(100)
+. tabstat price if days_left<=50 & days_left>=41 & class_dummy ==1, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  48221.36     42457     54841
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=50 & days_left>=41 & class_dummy ==1, p(25)
+(16,721 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=50 & days_left>=41 & class_dummy ==1, p(75)
+(16,721 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=50 & days_left>=41 & class_dummy ==1
+(3 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *40-31
+. graph hbox price if days_left<=40 & days_left>=31 & class_dummy ==1
+
+. histogram price if days_left<=40 & days_left>=31 & class_dummy ==1, width(500)
+(bin=83, start=32859, width=500)
+
+. *histogram price if days_left<=40 & days_left>=31 & class_dummy ==1 & price<=30000, width(100)
+. tabstat price if days_left<=40 & days_left>=31 & class_dummy ==1, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  48097.89     42457     54841
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=40 & days_left>=31 & class_dummy ==1, p(25)
+(16,427 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=40 & days_left>=31 & class_dummy ==1, p(75)
+(16,427 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=40 & days_left>=31 & class_dummy ==1
+(1 observation deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. 
+. *30-21
+. graph hbox price if days_left<=30 & days_left>=21 & class_dummy ==1
+
+. histogram price if days_left<=30 & days_left>=21 & class_dummy ==1, width(500)
+(bin=99, start=32859, width=500)
+
+. *histogram price if days_left<=30 & days_left>=21 & class_dummy ==1& price<=30000, width(100)
+. tabstat price if days_left<=30 & days_left>=21 & class_dummy ==1, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  48254.49     42457     54841
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=30 & days_left>=21 & class_dummy ==1, p(25)
+(16,442 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=30 & days_left>=21 & class_dummy ==1, p(75)
+(16,442 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=30 & days_left>=21 & class_dummy ==1
+(2 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *20-11
+. graph hbox price if days_left<=20 & days_left>=11 & class_dummy ==1
+
+. histogram price if days_left<=20 & days_left>=11 & class_dummy ==1, width(500)
+(bin=78, start=32859, width=500)
+
+. *histogram price if days_left<=20 & days_left>=11 & class_dummy ==1 & price<=5000, width(100)
+. tabstat price if days_left<=20 & days_left>=11 & class_dummy ==1, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |   48797.1     42457     57017
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=20 & days_left>=11 & class_dummy ==1, p(25)
+(16,434 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=20 & days_left>=11 & class_dummy ==1, p(75)
+(16,434 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=20 & days_left>=11 & class_dummy ==1
+(0 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *10-1
+. graph hbox price if days_left<=10 & days_left>=1 & class_dummy ==1
+
+. histogram price if days_left<=10 & days_left>=1 & class_dummy ==1, width(500)
+(bin=106, start=32859, width=500)
+
+. *histogram price if days_left<=10 & days_left>=1 & class_dummy ==1 & price<=30000, width(100)
+. drop if price <=33000 & days_left<=10 & days_left>=1 & class_dummy ==1
+(151 observations deleted)
+
+. tabstat price if days_left<=10 & days_left>=1 & class_dummy ==1, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  54949.01     45918     62729
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=10 & days_left>=1 & class_dummy ==1, p(25)
+(16,788 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=10 & days_left>=1 & class_dummy ==1, p(75)
+(16,788 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=10 & days_left>=1 & class_dummy ==1
+(0 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. 
+. 
+. count 
+  17,610
+
+. 
+. randomtag, count(12327) gen(train_noclass)
+
+. 
+. eststo Delhi_Bangalore2: regress price duration days_left days_left_squared days_left_cubed stops depart_after depart_early depart_even depart_late de
+> part_morn arr_after arr_early arr_even arr_late arr_morn    capacity class_dummy if train_noclass==1
+
+      Source |       SS           df       MS      Number of obs   =    12,306
+-------------+----------------------------------   F(17, 12288)    =  11280.30
+       Model |  5.3894e+12        17  3.1702e+11   Prob > F        =    0.0000
+    Residual |  3.4534e+11    12,288  28103956.8   R-squared       =    0.9398
+-------------+----------------------------------   Adj R-squared   =    0.9397
+       Total |  5.7347e+12    12,305   466046320   Root MSE        =    5301.3
+
+-----------------------------------------------------------------------------------
+            price | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+------------------+----------------------------------------------------------------
+         duration |   39.28741   11.98741     3.28   0.001     15.79021    62.78461
+        days_left |  -871.9517   46.15916   -18.89   0.000    -962.4309   -781.4725
+days_left_squared |    22.9294   1.977061    11.60   0.000     19.05405    26.80475
+  days_left_cubed |  -.1960915   .0251468    -7.80   0.000    -.2453832   -.1467997
+            stops |   4643.692   147.1277    31.56   0.000     4355.298    4932.085
+     depart_after |  -443.4601   220.7217    -2.01   0.045    -876.1094   -10.81089
+     depart_early |    715.505   200.3585     3.57   0.000     322.7709    1108.239
+      depart_even |   157.6017   183.9852     0.86   0.392    -203.0382    518.2415
+      depart_late |   584.8615   652.5531     0.90   0.370    -694.2451    1863.968
+      depart_morn |    1167.19   203.8902     5.72   0.000     767.5332    1566.847
+        arr_after |  -1556.705    167.798    -9.28   0.000    -1885.615   -1227.794
+        arr_early |   1941.757   341.5674     5.68   0.000     1272.231    2611.282
+         arr_even |  -890.7756   140.0087    -6.36   0.000    -1165.215   -616.3365
+         arr_late |  -1610.322   194.0562    -8.30   0.000    -1990.703   -1229.941
+         arr_morn |  -413.2355   152.5504    -2.71   0.007    -712.2582   -114.2128
+         capacity |  -14.75128    2.06445    -7.15   0.000    -18.79793   -10.70464
+      class_dummy |    43382.3   105.0408   413.00   0.000      43176.4     43588.2
+            _cons |   13911.95   548.9102    25.34   0.000        12836     14987.9
+-----------------------------------------------------------------------------------
+
+. 
+. predict pred_price  if  train_noclass==0
+(option xb assumed; fitted values)
+(12,336 missing values generated)
+
+. gen error = pred_price-price
+(12,336 missing values generated)
+
+. gen error_square = error^2
+(12,336 missing values generated)
+
+. gen ape = abs(error/price)
+(12,336 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      5,274    2.77e+07    5.17e+07   5.934267   7.22e+08
+
+. *Bangalore Delhi Linear Regression, cleaned data
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      5,274    .3710989    .3712482   .0000865   3.011244
+
+. save "delbangclean.dta", replace
+file delbangclean.dta saved
+
+. 
+. 
+. ***************************************************
+. *Mumbai Bangalore
+. clear
+
+. use "averaged_data.dta"
+
+. set seed 739292
+
+. ssc inst unique
+checking unique consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. keep if sourcedestination == "MumbaiBangalore"|sourcedestination == "BangaloreMumbai"
+(193,173 observations deleted)
+
+. drop _merge
+
+. 
+. ********Econ*****
+. *50-41
+. graph hbox price if days_left<=50 & days_left>=41 & class_dummy ==0
+
+. histogram price if days_left<=50 & days_left>=41 & class_dummy ==0, width(500)
+(bin=33, start=2074, width=500)
+
+. drop if price <=2200 & days_left<=50 & days_left>=41 & class_dummy ==0
+(324 observations deleted)
+
+. tabstat price if days_left<=50 & days_left>=41 & class_dummy ==0, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  5547.092      4501      6568
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=50 & days_left>=41 & class_dummy ==0, p(25)
+(16,984 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=50 & days_left>=41 & class_dummy ==0, p(75)
+(16,984 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=50 & days_left>=41 & class_dummy ==0
+(3 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *40-31
+. graph hbox price if days_left<=40 & days_left>=31 & class_dummy ==0
+
+. histogram price if days_left<=40 & days_left>=31 & class_dummy ==0, width(500)
+(bin=33, start=2074, width=500)
+
+. *histogram price if days_left<=40 & days_left>=31 & class_dummy ==0 & price<=5000, width(100)
+. drop if price <=2300 & days_left<=40 & days_left>=31 & class_dummy ==0
+(696 observations deleted)
+
+. tabstat price if days_left<=40 & days_left>=31 & class_dummy ==0, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  5889.798      4792      6568
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=40 & days_left>=31 & class_dummy ==0, p(25)
+(15,661 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=40 & days_left>=31 & class_dummy ==0, p(75)
+(15,661 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=40 & days_left>=31 & class_dummy ==0
+(30 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. 
+. *30-21
+. graph hbox price if days_left<=30 & days_left>=21 & class_dummy ==0
+
+. histogram price if days_left<=30 & days_left>=21 & class_dummy ==0, width(500)
+(bin=28, start=2074, width=500)
+
+. *histogram price if days_left<=30 & days_left>=21 & class_dummy ==0 & price<=5000, width(100)
+. drop if price <=2300 & days_left<=30 & days_left>=21 & class_dummy ==0
+(595 observations deleted)
+
+. tabstat price if days_left<=30 & days_left>=21 & class_dummy ==0, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  5780.042      4819      6568
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=30 & days_left>=21 & class_dummy ==0, p(25)
+(14,943 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=30 & days_left>=21 & class_dummy ==0, p(75)
+(14,943 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=30 & days_left>=21 & class_dummy ==0
+(35 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *20-11
+. graph hbox price if days_left<=20 & days_left>=11 & class_dummy ==0
+
+. histogram price if days_left<=20 & days_left>=11 & class_dummy ==0, width(500)
+(bin=46, start=2074, width=500)
+
+. *histogram price if days_left<=20 & days_left>=11 & class_dummy ==0 & price<=5000, width(100)
+. drop if price <=2300 & days_left<=20 & days_left>=11 & class_dummy ==0
+(272 observations deleted)
+
+. tabstat price if days_left<=20 & days_left>=11 & class_dummy ==0, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  7012.161      5127      8538
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=20 & days_left>=11 & class_dummy ==0, p(25)
+(14,418 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=20 & days_left>=11 & class_dummy ==0, p(75)
+(14,418 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=20 & days_left>=11 & class_dummy ==0
+(43 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *10-1
+. graph hbox price if days_left<=10 & days_left>=1 & class_dummy ==0
+
+. histogram price if days_left<=10 & days_left>=1 & class_dummy ==0, width(500)
+(bin=44, start=5101, width=500)
+
+. *histogram price if days_left<=10 & days_left>=1 & class_dummy ==0 & price<=10000, width(100)
+. drop if price <=5200 & days_left<=10 & days_left>=1 & class_dummy ==0
+(419 observations deleted)
+
+. tabstat price if days_left<=10 & days_left>=1 & class_dummy ==0, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  10588.21      8434     11627
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=10 & days_left>=1 & class_dummy ==0, p(25)
+(14,959 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=10 & days_left>=1 & class_dummy ==0, p(75)
+(14,959 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=10 & days_left>=1 & class_dummy ==0
+(78 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. 
+. ******Buiness*******
+. *50-41
+. graph hbox price if days_left<=50 & days_left>=41 & class_dummy ==1
+
+. histogram price if days_left<=50 & days_left>=41 & class_dummy ==1, width(500)
+(bin=133, start=20684, width=500)
+
+. *histogram price if days_left<=50 & days_left>=41 & class_dummy ==1 & price<=30000, width(100)
+. drop if price <=21000 & days_left<=50 & days_left>=41 & class_dummy ==1
+(147 observations deleted)
+
+. tabstat price if days_left<=50 & days_left>=41 & class_dummy ==1, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  61635.36     54684     69168
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=50 & days_left>=41 & class_dummy ==1, p(25)
+(14,985 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=50 & days_left>=41 & class_dummy ==1, p(75)
+(14,985 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=50 & days_left>=41 & class_dummy ==1
+(3 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *40-31
+. graph hbox price if days_left<=40 & days_left>=31 & class_dummy ==1
+
+. histogram price if days_left<=40 & days_left>=31 & class_dummy ==1, width(500)
+(bin=133, start=20684, width=500)
+
+. *histogram price if days_left<=40 & days_left>=31 & class_dummy ==1 & price<=40000, width(100)
+. drop if price <=25000 & days_left<=40 & days_left>=31 & class_dummy ==1
+(168 observations deleted)
+
+. tabstat price if days_left<=40 & days_left>=31 & class_dummy ==1, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  61781.71     54684     69168
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=40 & days_left>=31 & class_dummy ==1, p(25)
+(14,490 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=40 & days_left>=31 & class_dummy ==1, p(75)
+(14,490 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=40 & days_left>=31 & class_dummy ==1
+(0 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. 
+. *30-21
+. graph hbox price if days_left<=30 & days_left>=21 & class_dummy ==1
+
+. histogram price if days_left<=30 & days_left>=21 & class_dummy ==1, width(500)
+(bin=151, start=20684, width=500)
+
+. *histogram price if days_left<=30 & days_left>=21 & class_dummy ==1& price<=30000, width(100)
+. drop if price <=21000 & days_left<=30 & days_left>=21 & class_dummy ==1
+(164 observations deleted)
+
+. tabstat price if days_left<=30 & days_left>=21 & class_dummy ==1, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |   62003.3     54684     69168
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=30 & days_left>=21 & class_dummy ==1, p(25)
+(14,303 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=30 & days_left>=21 & class_dummy ==1, p(75)
+(14,303 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=30 & days_left>=21 & class_dummy ==1
+(10 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *20-11
+. graph hbox price if days_left<=20 & days_left>=11 & class_dummy ==1
+
+. histogram price if days_left<=20 & days_left>=11 & class_dummy ==1, width(500)
+(bin=163, start=20684, width=500)
+
+. *histogram price if days_left<=20 & days_left>=11 & class_dummy ==1 & price<=30000, width(100)
+. drop if price <=21000 & days_left<=20 & days_left>=11 & class_dummy ==1
+(167 observations deleted)
+
+. tabstat price if days_left<=20 & days_left>=11 & class_dummy ==1, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  62457.46     54684     69168
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=20 & days_left>=11 & class_dummy ==1, p(25)
+(14,148 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=20 & days_left>=11 & class_dummy ==1, p(75)
+(14,148 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=20 & days_left>=11 & class_dummy ==1
+(13 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. *10-1
+. graph hbox price if days_left<=10 & days_left>=1 & class_dummy ==1
+
+. histogram price if days_left<=10 & days_left>=1 & class_dummy ==1, width(500)
+(bin=164, start=20684, width=500)
+
+. *histogram price if days_left<=10 & days_left>=1 & class_dummy ==1 & price<=30000, width(100)
+. drop if price <=21000 & days_left<=10 & days_left>=1 & class_dummy ==1
+(94 observations deleted)
+
+. tabstat price if days_left<=10 & days_left>=1 & class_dummy ==1, statistics(mean p25 p75)
+
+    Variable |      Mean       p25       p75
+-------------+------------------------------
+       price |  64396.57     54684     71632
+--------------------------------------------
+
+. egen p25 = pctile(price) if days_left<=10 & days_left>=1 & class_dummy ==1, p(25)
+(14,340 missing values generated)
+
+. egen p75 = pctile(price) if days_left<=10 & days_left>=1 & class_dummy ==1, p(75)
+(14,340 missing values generated)
+
+. drop if (price>= p75+1.5*(p75-p25)|price<= p25-1.5*(p75-p25)) & days_left<=10 & days_left>=1 & class_dummy ==1
+(37 observations deleted)
+
+. drop p25
+
+. drop p75
+
+. 
+. 
+. count 
+  15,413
+
+. 
+. randomtag, count(10789) gen(train_noclass)
+
+. 
+. eststo Bangalore_Mumbai2: regress price duration days_left days_left_squared days_left_cubed stops depart_after depart_early depart_even depart_late d
+> epart_morn arr_after arr_early arr_even arr_late arr_morn    capacity class_dummy if train_noclass==1
+
+      Source |       SS           df       MS      Number of obs   =    10,765
+-------------+----------------------------------   F(17, 10747)    =  14976.52
+       Model |  8.2155e+12        17  4.8327e+11   Prob > F        =    0.0000
+    Residual |  3.4679e+11    10,747  32268296.6   R-squared       =    0.9595
+-------------+----------------------------------   Adj R-squared   =    0.9594
+       Total |  8.5623e+12    10,764   795459210   Root MSE        =    5680.5
+
+-----------------------------------------------------------------------------------
+            price | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+------------------+----------------------------------------------------------------
+         duration |   -217.558   12.77758   -17.03   0.000    -242.6045   -192.5116
+        days_left |  -638.8741   49.58271   -12.89   0.000    -736.0654   -541.6829
+days_left_squared |   18.19899   2.179418     8.35   0.000     13.92693    22.47105
+  days_left_cubed |  -.1703912   .0281686    -6.05   0.000    -.2256068   -.1151756
+            stops |   5143.052   305.6881    16.82   0.000     4543.846    5742.257
+     depart_after |  -1253.414   248.8706    -5.04   0.000    -1741.247   -765.5819
+     depart_early |   306.2123   212.5741     1.44   0.150    -110.4722    722.8968
+      depart_even |   321.4495   210.7624     1.53   0.127     -91.6838    734.5829
+      depart_late |  -1993.825   1739.846    -1.15   0.252    -5404.244    1416.595
+      depart_morn |   650.7466   224.5295     2.90   0.004     210.6274    1090.866
+        arr_after |  -3199.015   193.9232   -16.50   0.000     -3579.14   -2818.889
+        arr_early |   1571.828   355.0795     4.43   0.000     875.8067     2267.85
+         arr_even |   -1956.15   143.3939   -13.64   0.000    -2237.229   -1675.072
+         arr_late |  -3158.972   290.7592   -10.86   0.000    -3728.914   -2589.031
+         arr_morn |   316.6813   173.7723     1.82   0.068    -23.94448     657.307
+         capacity |  -21.38894   2.194852    -9.75   0.000    -25.69126   -17.08663
+      class_dummy |   55882.49   116.4825   479.75   0.000     55654.16    56110.82
+            _cons |   15299.17   638.8541    23.95   0.000      14046.9    16551.44
+-----------------------------------------------------------------------------------
+
+. 
+. predict pred_price  if  train_noclass==0
+(option xb assumed; fitted values)
+(10,802 missing values generated)
+
+. gen error = pred_price-price
+(10,802 missing values generated)
+
+. gen error_square = error^2
+(10,802 missing values generated)
+
+. gen ape = abs(error/price)
+(10,802 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      4,611    3.27e+07    7.81e+07   .8987003   1.09e+09
+
+. *Mumbai Bangalore Linear Regression, cleaned data
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      4,611    .2309411     .303141   .0001695   4.885572
+
+. 
+. save "bangmumbaiclean.dta", replace
+file bangmumbaiclean.dta saved
+
+. 
+. 
+. 
+. 
+. 
+. ****************
+. *CART on clean data
+. ****************
+. *Delhi/Mumbai
+. clear
+
+. use "delmumbaiclean.dta"
+
+. drop train_noclass
+
+. drop pred_price
+
+. drop error
+
+. drop error_square
+
+. drop ape
+
+. set seed 12322
+
+. 
+. count 
+  17,121
+
+. 
+. randomtag, count(11985) gen(train_noclass)
+
+. 
+. crtrees price class_dummy duration days_left stops depart_after depart_early depart_even depart_late depart_morn arr_after arr_early arr_even arr_late
+>  arr_morn    capacity if train_noclass==1, stop(50) generate(predicted) seed(123) rule(2)
+
+Regression Trees with learning and test samples (SE rule: 2)
+
+Learning Sample                                    Test Sample
+|T*|          = 22       
+Number of obs = 5755                               Number of obs   =      5765
+R-squared     = 0.9637                             R-squared       =    0.9605
+Avg Dep Var   = 22204.630                          Avg Dep Var     = 22466.516
+Root MSE      = 3896.343                           Root MSE        =  4086.570
+
+Terminal node results:
+
+
+Node 8: 
+     Characteristics:
+        class_dummy==0
+        1.83<=duration<=4.08
+        1<=days_left<=13
+                                                   Number of obs   =       166
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   6588.735   117.1777    56.23   0.000     6359.071    6818.399
+------------------------------------------------------------------------------
+
+
+
+Node 10: 
+     Characteristics:
+        class_dummy==0
+        1.83<=duration<=4.83
+        14<=days_left<=49
+                                                   Number of obs   =       651
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   3438.682   47.65197    72.16   0.000     3345.286    3532.078
+------------------------------------------------------------------------------
+
+
+
+Node 11: 
+     Characteristics:
+        class_dummy==0
+        4.92<=duration<=30.08
+        14<=days_left<=49
+                                                   Number of obs   =      2008
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |    5703.91   35.49354   160.70   0.000     5634.344    5773.476
+------------------------------------------------------------------------------
+
+
+
+Node 12: 
+     Characteristics:
+        class_dummy==1
+        1.83<=duration<=4.42
+                                                   Number of obs   =       420
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |    35731.7   258.0552   138.47   0.000     35225.93    36237.48
+------------------------------------------------------------------------------
+
+
+
+Node 13: 
+     Characteristics:
+        class_dummy==1
+        4.5<=duration<=5.33
+                                                   Number of obs   =       108
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   42174.44   763.2909    55.25   0.000     40678.41    43670.46
+------------------------------------------------------------------------------
+
+
+
+Node 18: 
+     Characteristics:
+        class_dummy==0
+        4.17<=duration<=30.08
+        1<=days_left<=10
+                                                   Number of obs   =       432
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   12768.79   148.0539    86.24   0.000     12478.61    13058.97
+------------------------------------------------------------------------------
+
+
+
+Node 19: 
+     Characteristics:
+        class_dummy==0
+        4.17<=duration<=30.08
+        11<=days_left<=13
+                                                   Number of obs   =       213
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   9512.521   196.1313    48.50   0.000     9128.111    9896.932
+------------------------------------------------------------------------------
+
+
+
+Node 28: 
+     Characteristics:
+        class_dummy==1
+        5.42<=duration<=6.25
+                                                   Number of obs   =       173
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   55163.32   373.0034   147.89   0.000     54432.25     55894.4
+------------------------------------------------------------------------------
+
+
+
+Node 47: 
+     Characteristics:
+        class_dummy==1
+        16<=duration<=30.08
+        74<=capacity<=180
+                                                   Number of obs   =       322
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   40939.96   222.9853   183.60   0.000     40502.92       41377
+------------------------------------------------------------------------------
+
+
+
+Node 49: 
+     Characteristics:
+        class_dummy==1
+        13.42<=duration<=30.08
+        arr_morn==1
+        188<=capacity<=342
+                                                   Number of obs   =        54
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   52829.93   150.0477   352.09   0.000     52535.84    53124.01
+------------------------------------------------------------------------------
+
+
+
+Node 69: 
+     Characteristics:
+        class_dummy==1
+        9.25<=duration<=10.5
+                                                   Number of obs   =        56
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   42342.18   850.3121    49.80   0.000      40675.6    44008.76
+------------------------------------------------------------------------------
+
+
+
+Node 70: 
+     Characteristics:
+        class_dummy==1
+        10.75<=duration<=13.33
+        depart_early==0
+                                                   Number of obs   =       319
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   52204.85   301.2097   173.32   0.000     51614.49    52795.21
+------------------------------------------------------------------------------
+
+
+
+Node 71: 
+     Characteristics:
+        class_dummy==1
+        10.75<=duration<=13.33
+        depart_early==1
+                                                   Number of obs   =        79
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   56959.66   758.1779    75.13   0.000     55473.66    58445.66
+------------------------------------------------------------------------------
+
+
+
+Node 72: 
+     Characteristics:
+        class_dummy==1
+        13.42<=duration<=13.67
+        74<=capacity<=180
+                                                   Number of obs   =        62
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |      42277   836.8797    50.52   0.000     40636.75    43917.25
+------------------------------------------------------------------------------
+
+
+
+Node 73: 
+     Characteristics:
+        class_dummy==1
+        13.75<=duration<=15.92
+        74<=capacity<=180
+                                                   Number of obs   =        69
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   49913.68   730.5251    68.33   0.000     48481.88    51345.48
+------------------------------------------------------------------------------
+
+
+
+Node 76: 
+     Characteristics:
+        class_dummy==1
+        13.42<=duration<=14.92
+        arr_morn==0
+        188<=capacity<=342
+                                                   Number of obs   =        65
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   51374.91    711.898    72.17   0.000     49979.61     52770.2
+------------------------------------------------------------------------------
+
+
+
+Node 92: 
+     Characteristics:
+        class_dummy==1
+        6.33<=duration<=6.42
+                                                   Number of obs   =        64
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   45447.11   1098.046    41.39   0.000     43294.98    47599.24
+------------------------------------------------------------------------------
+
+
+
+Node 98: 
+     Characteristics:
+        class_dummy==1
+        15<=duration<=30.08
+        arr_morn==0
+        188<=capacity<=194
+                                                   Number of obs   =        75
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   42033.55   563.4818    74.60   0.000     40929.14    43137.95
+------------------------------------------------------------------------------
+
+
+
+Node 99: 
+     Characteristics:
+        class_dummy==1
+        15<=duration<=30.08
+        arr_morn==0
+        210<=capacity<=342
+                                                   Number of obs   =        83
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   48425.53   1040.613    46.54   0.000     46385.97    50465.09
+------------------------------------------------------------------------------
+
+
+
+Node 115: 
+     Characteristics:
+        class_dummy==1
+        7.83<=duration<=9.17
+                                                   Number of obs   =       124
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   49267.48   715.2256    68.88   0.000     47865.67     50669.3
+------------------------------------------------------------------------------
+
+
+
+Node 136: 
+     Characteristics:
+        class_dummy==1
+        6.5<=duration<=7.75
+        74<=capacity<=180
+                                                   Number of obs   =       112
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   56035.59   508.5618   110.18   0.000     55038.83    57032.35
+------------------------------------------------------------------------------
+
+
+
+Node 137: 
+     Characteristics:
+        class_dummy==1
+        6.5<=duration<=7.75
+        188<=capacity<=342
+                                                   Number of obs   =       100
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   49241.93    545.408    90.28   0.000     48172.95    50310.91
+------------------------------------------------------------------------------
+
+
+
+. 
+. predict pred_price  if  train_noclass==0
+
+. gen error = pred_price-price
+(11,985 missing values generated)
+
+. gen error_square = error^2
+(11,985 missing values generated)
+
+. gen ape = abs(error/price)
+(11,985 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      5,136    1.76e+07    4.72e+07   .6272516   8.28e+08
+
+. *Mumbai Delhi CART, cleaned data
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      5,136    .1703408    .1701713    .000062   1.076414
+
+. 
+. ****************
+. *Delhi/Bangalore
+. clear
+
+. use "delbangclean.dta"
+
+. drop train_noclass
+
+. drop pred_price
+
+. drop error
+
+. drop error_square
+
+. drop ape
+
+. set seed 12322
+
+. 
+. count 
+  17,610
+
+. 
+. randomtag, count(12327) gen(train_noclass)
+
+. 
+. crtrees price class_dummy duration days_left stops depart_after depart_early depart_even depart_late depart_morn arr_after arr_early arr_even arr_late
+>  arr_morn    capacity if train_noclass==1, stop(50) generate(predicted) seed(123) rule(2)
+
+Regression Trees with learning and test samples (SE rule: 2)
+
+Learning Sample                                    Test Sample
+|T*|          = 16       
+Number of obs = 6140                               Number of obs   =      6167
+R-squared     = 0.9783                             R-squared       =    0.9767
+Avg Dep Var   = 19777.109                          Avg Dep Var     = 19981.582
+Root MSE      = 3151.126                           Root MSE        =  3309.548
+
+Terminal node results:
+
+
+Node 4: 
+     Characteristics:
+        class_dummy==0
+        1<=days_left<=14
+                                                   Number of obs   =       815
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   10116.87   65.53554   154.37   0.000     9988.419    10245.31
+------------------------------------------------------------------------------
+
+
+
+Node 5: 
+     Characteristics:
+        class_dummy==0
+        15<=days_left<=49
+                                                   Number of obs   =      3296
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   4238.561   20.20028   209.83   0.000     4198.969    4278.153
+------------------------------------------------------------------------------
+
+
+
+Node 6: 
+     Characteristics:
+        class_dummy==1
+        2.5<=duration<=2.92
+                                                   Number of obs   =       375
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   33625.93   181.9231   184.84   0.000     33269.36    33982.49
+------------------------------------------------------------------------------
+
+
+
+Node 28: 
+     Characteristics:
+        class_dummy==1
+        3<=duration<=26.92
+        1<=days_left<=7
+        74<=capacity<=180
+                                                   Number of obs   =       130
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   60277.68   871.7864    69.14   0.000     58569.01    61986.35
+------------------------------------------------------------------------------
+
+
+
+Node 30: 
+     Characteristics:
+        class_dummy==1
+        3<=duration<=26.92
+        188<=capacity<=194
+                                                   Number of obs   =       145
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |    42996.3    210.925   203.85   0.000      42582.9    43409.71
+------------------------------------------------------------------------------
+
+
+
+Node 48: 
+     Characteristics:
+        class_dummy==1
+        3<=duration<=14.92
+        210<=capacity<=342
+                                                   Number of obs   =        61
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   58282.43   1119.162    52.08   0.000     56088.91    60475.94
+------------------------------------------------------------------------------
+
+
+
+Node 49: 
+     Characteristics:
+        class_dummy==1
+        15<=duration<=26.92
+        210<=capacity<=342
+                                                   Number of obs   =        61
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |    42616.7     93.093   457.79   0.000     42434.25    42799.16
+------------------------------------------------------------------------------
+
+
+
+Node 67: 
+     Characteristics:
+        class_dummy==1
+        3<=duration<=8.5
+        8<=days_left<=49
+        arr_late==1
+        74<=capacity<=180
+                                                   Number of obs   =        56
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |      46463   760.8904    61.06   0.000     44971.68    47954.32
+------------------------------------------------------------------------------
+
+
+
+Node 69: 
+     Characteristics:
+        class_dummy==1
+        8.58<=duration<=26.92
+        8<=days_left<=49
+        depart_early==1
+        74<=capacity<=180
+                                                   Number of obs   =       145
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   57401.99   353.1558   162.54   0.000     56709.82    58094.17
+------------------------------------------------------------------------------
+
+
+
+Node 89: 
+     Characteristics:
+        class_dummy==1
+        8.58<=duration<=26.92
+        8<=days_left<=49
+        depart_early==0
+        depart_morn==1
+        74<=capacity<=180
+                                                   Number of obs   =       302
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   54902.25   252.1158   217.77   0.000     54408.11    55396.38
+------------------------------------------------------------------------------
+
+
+
+Node 110: 
+     Characteristics:
+        class_dummy==1
+        3<=duration<=6.42
+        8<=days_left<=49
+        depart_morn==0
+        arr_late==0
+        74<=capacity<=180
+                                                   Number of obs   =       123
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   54042.04   464.6671   116.30   0.000     53131.31    54952.77
+------------------------------------------------------------------------------
+
+
+
+Node 111: 
+     Characteristics:
+        class_dummy==1
+        6.5<=duration<=8.5
+        8<=days_left<=49
+        depart_morn==0
+        arr_late==0
+        74<=capacity<=180
+                                                   Number of obs   =        87
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   49141.87   686.9041    71.54   0.000     47795.57    50488.18
+------------------------------------------------------------------------------
+
+
+
+Node 112: 
+     Characteristics:
+        class_dummy==1
+        3<=duration<=6
+        8<=days_left<=49
+        depart_morn==1
+        arr_late==0
+        74<=capacity<=180
+                                                   Number of obs   =        57
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |      46217   714.6737    64.67   0.000     44816.27    47617.73
+------------------------------------------------------------------------------
+
+
+
+Node 113: 
+     Characteristics:
+        class_dummy==1
+        6.08<=duration<=8.5
+        8<=days_left<=49
+        depart_morn==1
+        arr_late==0
+        74<=capacity<=180
+                                                   Number of obs   =        90
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   51301.27   487.3511   105.27   0.000     50346.08    52256.46
+------------------------------------------------------------------------------
+
+
+
+Node 114: 
+     Characteristics:
+        class_dummy==1
+        8.58<=duration<=13.67
+        8<=days_left<=49
+        depart_early==0
+        depart_morn==0
+        74<=capacity<=180
+                                                   Number of obs   =       159
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |    48402.4    482.807   100.25   0.000     47456.11    49348.68
+------------------------------------------------------------------------------
+
+
+
+Node 115: 
+     Characteristics:
+        class_dummy==1
+        13.75<=duration<=26.92
+        8<=days_left<=49
+        depart_early==0
+        depart_morn==0
+        74<=capacity<=180
+                                                   Number of obs   =       238
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   54643.29   342.5081   159.54   0.000     53971.98    55314.59
+------------------------------------------------------------------------------
+
+
+
+. 
+. predict pred_price  if  train_noclass==0
+
+. gen error = pred_price-price
+(12,327 missing values generated)
+
+. gen error_square = error^2
+(12,327 missing values generated)
+
+. gen ape = abs(error/price)
+(12,327 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      5,283    1.10e+07    3.69e+07   8.215165   6.70e+08
+
+. *Bangalore Delhi CART, cleaned data
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      5,283    .1253151    .1391975   .0002413   .7038664
+
+. 
+. 
+. ****************
+. *Mumbai/Bangalore
+. clear
+
+. use "bangmumbaiclean.dta"
+
+. drop train_noclass
+
+. drop pred_price
+
+. drop error
+
+. drop error_square
+
+. drop ape
+
+. set seed 12322
+
+. 
+. count 
+  15,413
+
+. 
+. randomtag, count(10789) gen(train_noclass)
+
+. 
+. crtrees price class_dummy duration days_left stops depart_after depart_early depart_even depart_late depart_morn arr_after arr_early arr_even arr_late
+>  arr_morn    capacity if train_noclass==1, stop(50) generate(predicted) seed(123) rule(2)
+
+Regression Trees with learning and test samples (SE rule: 2)
+
+Learning Sample                                    Test Sample
+|T*|          = 14       
+Number of obs = 5381                               Number of obs   =      5380
+R-squared     = 0.9784                             R-squared       =    0.9777
+Avg Dep Var   = 29371.737                          Avg Dep Var     = 30101.733
+Root MSE      = 4134.515                           Root MSE        =  4231.636
+
+Terminal node results:
+
+
+Node 4: 
+     Characteristics:
+        class_dummy==0
+        1<=days_left<=10
+                                                   Number of obs   =       446
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   9961.251   113.6453    87.65   0.000      9738.51    10183.99
+------------------------------------------------------------------------------
+
+
+
+Node 5: 
+     Characteristics:
+        class_dummy==0
+        11<=days_left<=49
+                                                   Number of obs   =      2744
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   6071.941    33.2856   182.42   0.000     6006.702     6137.18
+------------------------------------------------------------------------------
+
+
+
+Node 14: 
+     Characteristics:
+        class_dummy==1
+        16.67<=duration<=26.5
+        78<=capacity<=180
+                                                   Number of obs   =        84
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   49565.75   674.4221    73.49   0.000     48243.91    50887.59
+------------------------------------------------------------------------------
+
+
+
+Node 15: 
+     Characteristics:
+        class_dummy==1
+        16.67<=duration<=26.5
+        188<=capacity<=342
+                                                   Number of obs   =       212
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   55104.69   132.1077   417.12   0.000     54845.77    55363.62
+------------------------------------------------------------------------------
+
+
+
+Node 22: 
+     Characteristics:
+        class_dummy==1
+        1.58<=duration<=6
+        78<=capacity<=180
+                                                   Number of obs   =        63
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   54968.83   1467.789    37.45   0.000     52092.01    57845.64
+------------------------------------------------------------------------------
+
+
+
+Node 24: 
+     Characteristics:
+        class_dummy==1
+        1.58<=duration<=16.33
+        188<=capacity<=194
+                                                   Number of obs   =       374
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   54872.09   85.56367   641.30   0.000     54704.39     55039.8
+------------------------------------------------------------------------------
+
+
+
+Node 38: 
+     Characteristics:
+        class_dummy==1
+        6.08<=duration<=16.33
+        1<=days_left<=7
+        78<=capacity<=180
+                                                   Number of obs   =       115
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   73204.83   1009.863    72.49   0.000     71225.53    75184.12
+------------------------------------------------------------------------------
+
+
+
+Node 43: 
+     Characteristics:
+        class_dummy==1
+        1.58<=duration<=16.33
+        depart_even==1
+        210<=capacity<=342
+                                                   Number of obs   =        89
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   71695.93   556.0369   128.94   0.000     70606.12    72785.74
+------------------------------------------------------------------------------
+
+
+
+Node 60: 
+     Characteristics:
+        class_dummy==1
+        6.08<=duration<=16.33
+        8<=days_left<=49
+        depart_early==0
+        78<=capacity<=180
+                                                   Number of obs   =       724
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |    67249.3   260.4335   258.22   0.000     66738.86    67759.74
+------------------------------------------------------------------------------
+
+
+
+Node 64: 
+     Characteristics:
+        class_dummy==1
+        1.58<=duration<=16.33
+        depart_early==0
+        depart_even==0
+        210<=capacity<=342
+                                                   Number of obs   =        78
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   54900.12   241.4128   227.41   0.000     54426.96    55373.28
+------------------------------------------------------------------------------
+
+
+
+Node 65: 
+     Characteristics:
+        class_dummy==1
+        1.58<=duration<=16.33
+        depart_early==1
+        depart_even==0
+        210<=capacity<=342
+                                                   Number of obs   =        85
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |    69762.2   421.1074   165.66   0.000     68936.84    70587.56
+------------------------------------------------------------------------------
+
+
+
+Node 81: 
+     Characteristics:
+        class_dummy==1
+        6.08<=duration<=16.33
+        8<=days_left<=49
+        depart_early==1
+        arr_even==1
+        78<=capacity<=180
+                                                   Number of obs   =       149
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   60713.58   532.1685   114.09   0.000     59670.55    61756.61
+------------------------------------------------------------------------------
+
+
+
+Node 94: 
+     Characteristics:
+        class_dummy==1
+        6.08<=duration<=14.25
+        8<=days_left<=49
+        depart_early==1
+        arr_even==0
+        78<=capacity<=180
+                                                   Number of obs   =       130
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   68463.39   391.3837   174.93   0.000     67696.29    69230.49
+------------------------------------------------------------------------------
+
+
+
+Node 95: 
+     Characteristics:
+        class_dummy==1
+        14.33<=duration<=16.33
+        8<=days_left<=49
+        depart_early==1
+        arr_even==0
+        78<=capacity<=180
+                                                   Number of obs   =        88
+------------------------------------------------------------------------------
+       price | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      _const |   62133.27   881.3511    70.50   0.000     60405.86    63860.69
+------------------------------------------------------------------------------
+
+
+
+. 
+. predict pred_price  if  train_noclass==0
+
+. gen error = pred_price-price
+(10,789 missing values generated)
+
+. gen error_square = error^2
+(10,789 missing values generated)
+
+. gen ape = abs(error/price)
+(10,789 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      4,624    1.89e+07    5.84e+07   .0034907   8.73e+08
+
+. *Mumbai Bangalore CART, cleaned data
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      4,624    .1776554    .2652983   9.73e-06   1.758719
+
+. 
+. 
+. 
+. 
+. 
+. 
+. 
+. *********************************
+. *Random Forest
+. ********************************
+. *********CLEAN*********************
+. *Dellhi Mumbai
+. clear
+
+. ssc install rforest
+checking rforest consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. use "delmumbaiclean.dta"
+
+. drop train_noclass
+
+. drop pred_price
+
+. drop error
+
+. drop error_square
+
+. drop ape
+
+. set seed 275643
+
+. 
+. count 
+  17,121
+
+. randomtag, count(12327) gen(train_noclass)
+
+. 
+. rforest price duration days_left days_left_squared days_left_cubed stops depart_after depart_early depart_even depart_late depart_morn arr_after arr_e
+> arly arr_even arr_late arr_morn    capacity class_dummy if train_noclass==1, type(reg) iter(500)
+
+. 
+. predict pred_price if train_noclass==0
+
+. gen error = pred_price-price
+(12,327 missing values generated)
+
+. gen error_square = error^2
+(12,327 missing values generated)
+
+. gen ape = abs(error/price)
+(12,327 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      4,794    1.20e+07    3.55e+07   .0339754   7.02e+08
+
+. *Mumbai Delhi Random Forest, cleaned data
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      4,794    .2237552    .2518092   3.69e-06    1.75681
+
+. 
+. 
+. 
+. *******************
+. *Dellhi Bangalore
+. clear
+
+. ssc install rforest
+checking rforest consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. use "delbangclean.dta"
+
+. drop train_noclass
+
+. drop pred_price
+
+. drop error
+
+. drop error_square
+
+. drop ape
+
+. set seed 275643
+
+. 
+. count 
+  17,610
+
+. randomtag, count(11985) gen(train_noclass)
+
+. 
+. rforest price duration days_left days_left_squared days_left_cubed stops depart_after depart_early depart_even depart_late depart_morn arr_after arr_e
+> arly arr_even arr_late arr_morn    capacity class_dummy if train_noclass==1, type(reg) iter(500)
+
+. 
+. predict pred_price if train_noclass==0
+
+. gen error = pred_price-price
+(11,985 missing values generated)
+
+. gen error_square = error^2
+(11,985 missing values generated)
+
+. gen ape = abs(error/price)
+(11,985 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      5,625     9539967    3.35e+07   3.914839   6.35e+08
+
+. *Bangalore Delhi Random Forest, cleaned data
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      5,625    .2167221    .1974004   .0000466   1.054685
+
+. 
+. ******************************
+. *Bangalore Mumbai
+. clear
+
+. ssc install rforest
+checking rforest consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. use "bangmumbaiclean.dta"
+
+. drop train_noclass
+
+. drop pred_price
+
+. drop error
+
+. drop error_square
+
+. drop ape
+
+. set seed 275643
+
+. 
+. count 
+  15,413
+
+. randomtag, count(10789) gen(train_noclass)
+
+. 
+. rforest price duration days_left days_left_squared days_left_cubed stops depart_after depart_early depart_even depart_late depart_morn arr_after arr_e
+> arly arr_even arr_late arr_morn    capacity class_dummy if train_noclass==1, type(reg) iter(500)
+
+. 
+. predict pred_price if train_noclass==0
+
+. gen error = pred_price-price
+(10,789 missing values generated)
+
+. gen error_square = error^2
+(10,789 missing values generated)
+
+. gen ape = abs(error/price)
+(10,789 missing values generated)
+
+. *MSE
+. summarize error_square
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+error_square |      4,624    1.35e+07    4.53e+07   .1624078   9.77e+08
+
+. *Mumbai Bangalore Random Forest, cleaned data
+. summarize ape
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+         ape |      4,624    .1641745    .2480463   .0000179    2.08619
+
+. 
+. log close
+      name:  <unnamed>
+       log:  /Users/eileenliu/Documents/Airline_DataCleaning_and_Analysis.log
+  log type:  text
+ closed on:  13 Dec 2022, 13:18:27
+--------------------------------------------------------------------------------------------------------------------------------------------------------
